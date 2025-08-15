@@ -783,6 +783,7 @@
                                     // 处理思考内容
                                     if (delta.reasoning_content) {
                                         thinkingContent += delta.reasoning_content;
+                                        console.log('[DEBUG] 收到思考内容:', delta.reasoning_content.substring(0, 50) + '...');
                                         if (model === 'qwen_thinking') {
                                             const thinkingDiv = contentDiv.querySelector('.thinking-content');
                                             if (thinkingDiv) {

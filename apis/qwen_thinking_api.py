@@ -118,6 +118,7 @@ class QwenThinkingAPI:
                 # 处理思考内容 - 在回答开始前输出思考过程
                 if hasattr(delta, "reasoning_content") and delta.reasoning_content is not None:
                     reasoning_content += delta.reasoning_content
+                    print(f"[DEBUG] 收到思考内容: {delta.reasoning_content[:50]}...")  # 调试日志
                     if not is_answering:  # 只在还没开始回答时显示思考过程
                         yield {
                             "choices": [{
@@ -131,6 +132,7 @@ class QwenThinkingAPI:
                 if hasattr(delta, "content") and delta.content:
                     if not is_answering:
                         is_answering = True
+                        print(f"[DEBUG] 开始回答，思考内容总长度: {len(reasoning_content)}")  # 调试日志
                         # 标记思考阶段结束，开始回答
                         yield {
                             "phase_change": "answer_start"
