@@ -222,9 +222,8 @@
         .image-options { display: flex; flex-direction: column; gap: 10px; }
         .image-options select {
             flex: 1; padding: 10px; border: 1px solid var(--border); border-radius: 10px; font-size: 12px; color: var(--text); background: rgba(2,6,23,0.5);
+            min-width: 0; width: 100%;
         }
-        #imageStyle { flex: 1; min-width: 0; }
-        #imageSize { flex: 1.6; min-width: 0; }
 
         .generate-image-btn {
             background: linear-gradient(90deg, var(--secondary), var(--primary));
@@ -269,6 +268,7 @@
         .video-options { display: flex; flex-direction: column; gap: 10px; }
         .video-options select {
             flex: 1; padding: 10px; border: 1px solid var(--border); border-radius: 10px; font-size: 12px; color: var(--text); background: rgba(2,6,23,0.5);
+            min-width: 0; width: 100%;
         }
 
         .generate-video-btn {
@@ -478,7 +478,7 @@
                             <option value="<auto>">自动风格</option>
                         </select>
                         <select id="imageSize" title="选择图像尺寸">
-                            <option value="1024*1024">1024×1024 (正方形)</option>
+                            <option value="1024*1024">1024×1024</option>
                         </select>
                     </div>
                     <button class="generate-image-btn" onclick="generateImage()">
@@ -502,7 +502,7 @@
                             <option value="quality">质量优先</option>
                         </select>
                         <select id="videoSize" title="选择视频尺寸">
-                            <option value="1920x1080">1920×1080 (全高清横屏)</option>
+                            <option value="1920x1080">1920×1080</option>
                         </select>
                         <select id="videoDuration" title="选择视频时长">
                             <option value="5">5秒</option>
