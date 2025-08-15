@@ -208,14 +208,14 @@ def generate_image_with_wanx(prompt, style="<auto>", size="1024*1024", n=1, nega
             "error": f"未知错误: {str(e)}"
         }
 
-def poll_task_result(task_id, max_wait_time=300, poll_interval=5):
+def poll_task_result(task_id, max_wait_time=120, poll_interval=3):
     """
     轮询任务结果
     
     Args:
         task_id (str): 任务ID
-        max_wait_time (int): 最大等待时间（秒），默认300秒
-        poll_interval (int): 轮询间隔（秒），默认5秒
+        max_wait_time (int): 最大等待时间（秒），默认120秒
+        poll_interval (int): 轮询间隔（秒），默认3秒
     
     Returns:
         dict: 包含成功状态和图片URL或错误信息
