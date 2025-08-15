@@ -280,6 +280,7 @@ def create_video():
         print(f"   - 帧率: {fps}")
         print(f"   - 音频: {with_audio}")
         
+        # 参数验证
         if not prompt and not image_url:
             return jsonify({
                 'error': '请提供视频描述文本或基础图片',
@@ -292,8 +293,35 @@ def create_video():
                 'status': 'error'
             }), 400
         
+        # 验证质量、尺寸等参数
         cogvideo_api = api_clients['cogvideo']
-        print(f"📡 调用 CogVideo API...")
+        supported_options = cogvideo_api.get_supported_options()
+        
+        if quality not in supported_options["qualities"]:
+            return jsonify({
+                'error': f'不支持的质量模式: {quality}，支持的模式: {supported_options["qualities"]}',
+                'status': 'error'
+            }), 400
+        
+        if size not in supported_options["sizes"]:
+            return jsonify({
+                'error': f'不支持的分辨率: {size}，支持的分辨率: {supported_options["sizes"]}',
+                'status': 'error'
+            }), 400
+        
+        if fps not in supported_options["fps_options"]:
+            return jsonify({
+                'error': f'不支持的帧率: {fps}，支持的帧率: {supported_options["fps_options"]}',
+                'status': 'error'
+            }), 400
+        
+        if duration not in supported_options["durations"]:
+            return jsonify({
+                'error': f'不支持的时长: {duration}，支持的时长: {supported_options["durations"]}',
+                'status': 'error'
+            }), 400
+        
+        print(f"📡 调用 GLM CogVideo API...")
         
         result = cogvideo_api.create_video_task(
             prompt=prompt,
@@ -309,7 +337,8 @@ def create_video():
         
         if result['success']:
             print(f"✅ 任务创建成功: {result['task_id']}")
-            return jsonify({
+            
+            response_data = {
                 'task_id': result['task_id'],
                 'status': result.get('status', 'processing'),
                 'prompt': prompt,
@@ -319,15 +348,27 @@ def create_video():
                 'duration': duration,
                 'fps': fps,
                 'with_audio': with_audio,
-                'message': '视频生成任务创建成功，请使用task_id查询结果'
-            })
+                'model': result.get('model', 'cogvideox-3'),
+                'request_id': result.get('request_id'),
+                'task_status': result.get('task_status', 'PROCESSING'),
+                'message': '视频生成任务创建成功，请使用task_id查询结果',
+                'estimated_time': f"预计生成时间: {duration * 10}-{duration * 20}秒"  # 估算时间
+            }
+            
+            return jsonify(response_data)
         else:
             error_msg = result.get('error', '视频生成任务创建失败')
+            status_code = result.get('status_code', 500)
+            error_code = result.get('error_code', 'unknown')
+            
             print(f"❌ 任务创建失败: {error_msg}")
+            
             return jsonify({
                 'error': error_msg,
-                'status': 'error'
-            }), 500
+                'status': 'error',
+                'error_code': error_code,
+                'status_code': status_code
+            }), status_code
             
     except Exception as e:
         error_msg = f'处理视频生成请求时发生异常: {str(e)}'
@@ -354,6 +395,16 @@ def get_video_task_status(task_id):
         result = cogvideo_api.query_task_status(task_id)
         
         print(f"📋 任务状态查询结果: {result}")
+        
+        # 添加额外信息
+        if result.get('success') and result.get('status') == 'completed':
+            # 任务完成，添加一些统计信息
+            result['completion_time'] = time.time()
+            result['download_ready'] = True
+        elif result.get('success') and result.get('status') == 'processing':
+            # 处理中，添加进度估算
+            result['progress_message'] = '正在生成视频，请耐心等待...'
+        
         return jsonify(result)
         
     except Exception as e:

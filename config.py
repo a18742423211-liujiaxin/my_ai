@@ -41,17 +41,22 @@ HUNYUAN_CONFIG = {
     "enable_enhancement": True
 }
 
-# CogVideoX 视频生成API配置
+# GLM CogVideoX 视频生成API配置（官方接口）
 COGVIDEO_CONFIG = {
-    "api_base": "https://api.minimaxi.chat/v1/paas/v4/videos/generations",
-    "api_key": os.getenv('COGVIDEO_API_KEY', ''),
+    "api_base": "https://open.bigmodel.cn",
+    "query_base": "https://open.bigmodel.cn/api/paas/v4/async-result/",
+    "api_key": os.getenv('GLM_API_KEY', '') or os.getenv('COGVIDEO_API_KEY', ''),
     "model": "cogvideox-3",
-    "timeout": 30,
+    "timeout": 60,  # 增加超时时间，视频生成较慢
     "default_quality": "speed",
     "default_size": "1920x1080",
     "default_fps": 30,
     "default_duration": 5,
-    "max_prompt_length": 1500
+    "max_prompt_length": 1500,
+    "supported_qualities": ["speed", "quality"],
+    "supported_sizes": ["1280x720", "720x1280", "1024x1024", "1920x1080", "1080x1920", "2048x1080", "3840x2160"],
+    "supported_fps": [30, 60],
+    "supported_durations": [5, 10]
 }
 
 # Flask应用配置
@@ -79,7 +84,7 @@ MODELS_INFO = {
         'api_base': WANX_CONFIG['api_base']
     },
     'cogvideo': {
-        'name': 'CogVideoX 视频生成',
+        'name': 'GLM CogVideoX 视频生成',
         'model': COGVIDEO_CONFIG['model'],
         'api_base': COGVIDEO_CONFIG['api_base']
     }
