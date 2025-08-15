@@ -137,7 +137,7 @@
             background: var(--glass-bg) !important;
             border: 1px solid var(--primary-color) !important;
             box-shadow: 0 0 20px var(--primary-color) !important;
-            transform: translateY(-2px);
+            font-weight: bold;
         }
 
         .nav-link.active::before {
@@ -853,7 +853,8 @@
                     },
                     body: JSON.stringify({
                         model: model,
-                        message: input
+                        message: input,
+                        stream: false
                     })
                 });
                 
