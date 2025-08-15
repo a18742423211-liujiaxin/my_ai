@@ -22,7 +22,22 @@ api_clients = {
 
 @app.route('/')
 def index():
-    """主页"""
+    """主页 - 大驴AI智能创作平台"""
+    return render_template('index.html')
+
+@app.route('/chat')  
+def chat_page():
+    """AI对话页面 - 单页应用路由"""
+    return render_template('index.html')
+
+@app.route('/image')
+def image_page():
+    """文生图页面 - 单页应用路由"""
+    return render_template('index.html')
+
+@app.route('/video')
+def video_page():
+    """视频生成页面 - 单页应用路由"""
     return render_template('index.html')
 
 @app.route('/models', methods=['GET'])
@@ -182,6 +197,65 @@ def chat_stream_internal(messages, model):
             "model": model
         }
         yield f"data: {json.dumps(error_chunk, ensure_ascii=False)}\n\n"
+
+@app.route('/generate-image', methods=['POST'])
+def generate_image():
+    """生成图像API - 支持动态尺寸"""
+    try:
+        data = request.get_json()
+        prompt = data.get('prompt', '').strip()
+        size = data.get('size', '1024*1024')
+        
+        if not prompt:
+            return jsonify({
+                'success': False,
+                'error': '请提供图像描述'
+            }), 400
+        
+        # 验证尺寸格式
+        if '*' in size:
+            try:
+                width, height = map(int, size.split('*'))
+                # 验证尺寸是否合理
+                if width < 256 or height < 256 or width > 2048 or height > 2048:
+                    return jsonify({
+                        'success': False,
+                        'error': '尺寸必须在256x256到2048x2048之间'
+                    }), 400
+            except ValueError:
+                return jsonify({
+                    'success': False,
+                    'error': '无效的尺寸格式，请使用"宽*高"格式'
+                }), 400
+        
+        # 调用万象API生成图像
+        wanx_api = api_clients.get('wanx')
+        if not wanx_api:
+            return jsonify({
+                'success': False,
+                'error': '图像生成服务暂不可用'
+            }), 500
+        
+        result = wanx_api.generate_image(prompt, size=size)
+        
+        if result.get('success'):
+            return jsonify({
+                'success': True,
+                'image_url': result.get('image_url'),
+                'prompt': prompt,
+                'size': size
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'error': result.get('error', '图像生成失败')
+            }), 500
+            
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': f'处理请求时发生异常: {str(e)}'
+        }), 500
 
 @app.route('/text-to-image', methods=['POST'])
 def text_to_image():
