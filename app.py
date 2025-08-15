@@ -143,21 +143,84 @@ def chat_stream_internal(messages, model):
     """内部流式响应处理函数"""
     api_client = api_clients.get(model)
     if not api_client:
-        yield f"data: {json.dumps({'error': f'不支持的模型: {model}'}, ensure_ascii=False)}\n\n"
+        yield f"data: {json.dumps({'type': 'error', 'error': f'不支持的模型: {model}'}, ensure_ascii=False)}\n\n"
         return
     
     try:
+        print(f"[DEBUG] 开始流式调用 {model} 模型")
+        
         # 调用对应的API进行流式响应
         for chunk in api_client.chat(messages, stream=True):
-            if "error" in chunk:
-                yield f"data: {json.dumps(chunk, ensure_ascii=False)}\n\n"
+            if "error" in chunk or chunk.get("type") == "error":
+                error_data = {
+                    "type": "error",
+                    "error": chunk.get("error", "未知错误"),
+                    "model": model
+                }
+                yield f"data: {json.dumps(error_data, ensure_ascii=False)}\n\n"
                 break
             
-            # 处理不同的chunk格式
-            if "choices" in chunk:
+            # 处理新的统一数据格式
+            if "type" in chunk:
+                chunk_type = chunk["type"]
+                
+                # 思考内容 - 实时传输
+                if chunk_type == "thinking":
+                    thinking_chunk = {
+                        "type": "thinking",
+                        "content": chunk["content"],
+                        "model": model,
+                        "total_length": chunk.get("total_length", 0)
+                    }
+                    print(f"[DEBUG] 发送思考内容: {chunk['content'][:30]}...")
+                    yield f"data: {json.dumps(thinking_chunk, ensure_ascii=False)}\n\n"
+                
+                # 思考阶段结束
+                elif chunk_type == "thinking_end":
+                    thinking_end_chunk = {
+                        "type": "thinking_end",
+                        "model": model,
+                        "thinking_summary": chunk.get("thinking_summary", "")
+                    }
+                    print(f"[DEBUG] 思考阶段结束，思考内容长度: {len(chunk.get('thinking_summary', ''))}")
+                    yield f"data: {json.dumps(thinking_end_chunk, ensure_ascii=False)}\n\n"
+                
+                # 回答内容 - 实时传输
+                elif chunk_type == "content":
+                    content_chunk = {
+                        "type": "content",
+                        "content": chunk["content"],
+                        "model": model,
+                        "total_length": chunk.get("total_length", 0)
+                    }
+                    print(f"[DEBUG] 发送回答内容: {chunk['content'][:30]}...")
+                    yield f"data: {json.dumps(content_chunk, ensure_ascii=False)}\n\n"
+                
+                # 使用情况统计
+                elif chunk_type == "usage":
+                    usage_chunk = {
+                        "type": "usage",
+                        "usage": chunk["usage"],
+                        "model": model
+                    }
+                    yield f"data: {json.dumps(usage_chunk, ensure_ascii=False)}\n\n"
+                
+                # 完成信号
+                elif chunk_type == "done":
+                    done_chunk = {
+                        "type": "done",
+                        "model": model,
+                        "summary": chunk.get("summary", {})
+                    }
+                    print(f"[DEBUG] 流式传输完成: {chunk.get('summary', {})}")
+                    yield f"data: {json.dumps(done_chunk, ensure_ascii=False)}\n\n"
+                    break
+            
+            # 兼容旧格式（choices结构）
+            elif "choices" in chunk:
                 delta = chunk["choices"][0].get("delta", {})
                 
-                # 检查是否有思考内容
+                # 检查是否有思考内容（旧格式兼容）
                 if "reasoning_content" in delta:
                     thinking_chunk = {
                         "type": "thinking",
@@ -166,7 +229,7 @@ def chat_stream_internal(messages, model):
                     }
                     yield f"data: {json.dumps(thinking_chunk, ensure_ascii=False)}\n\n"
                 
-                # 检查是否有回答内容
+                # 检查是否有回答内容（旧格式兼容）
                 if "content" in delta:
                     content_chunk = {
                         "type": "content",
@@ -174,8 +237,9 @@ def chat_stream_internal(messages, model):
                         "model": model
                     }
                     yield f"data: {json.dumps(content_chunk, ensure_ascii=False)}\n\n"
+            
+            # 处理使用统计（旧格式兼容）
             elif "usage" in chunk:
-                # 使用情况统计
                 usage_chunk = {
                     "type": "usage",
                     "usage": chunk["usage"],
@@ -183,17 +247,15 @@ def chat_stream_internal(messages, model):
                 }
                 yield f"data: {json.dumps(usage_chunk, ensure_ascii=False)}\n\n"
         
-        # 发送结束标记
-        end_chunk = {
-            "type": "done",
-            "model": model
-        }
-        yield f"data: {json.dumps(end_chunk, ensure_ascii=False)}\n\n"
+        print(f"[DEBUG] {model} 模型流式响应处理完成")
         
     except Exception as e:
+        error_msg = f'处理请求时发生异常: {str(e)}'
+        print(f"[ERROR] {model} 模型异常: {error_msg}")
+        
         error_chunk = {
             "type": "error",
-            "error": f'处理请求时发生异常: {str(e)}',
+            "error": error_msg,
             "model": model
         }
         yield f"data: {json.dumps(error_chunk, ensure_ascii=False)}\n\n"
@@ -518,6 +580,90 @@ def get_video_options():
             'default_fps': 30,
             'default_duration': 5
         })
+
+@app.route('/image-task-progress/<task_id>', methods=['GET'])
+def get_image_task_progress(task_id):
+    """查询文生图任务进度"""
+    try:
+        if not task_id or not task_id.strip():
+            return jsonify({
+                'error': '任务ID不能为空',
+                'status': 'error'
+            }), 400
+        
+        wanx_api = api_clients['wanx']
+        result = wanx_api.query_task_status(task_id)
+        
+        # 根据任务状态添加进度信息
+        if result.get('success'):
+            if result.get('status') == 'running':
+                # 为运行中的任务添加估算进度
+                result['progress'] = {
+                    'percentage': 50,  # 估算50%
+                    'message': '图像正在生成中...',
+                    'estimated_time': '预计还需30-60秒'
+                }
+            elif result.get('status') == 'completed':
+                result['progress'] = {
+                    'percentage': 100,
+                    'message': '图像生成完成！',
+                    'estimated_time': '已完成'
+                }
+        
+        return jsonify(result)
+        
+    except Exception as e:
+        return jsonify({
+            'error': f'查询图像任务进度时发生异常: {str(e)}',
+            'status': 'error'
+        }), 500
+
+@app.route('/video-task-progress/<task_id>', methods=['GET'])
+def get_video_task_progress(task_id):
+    """查询视频生成任务进度（增强版）"""
+    try:
+        if not task_id or not task_id.strip():
+            return jsonify({
+                'error': '任务ID不能为空',
+                'status': 'error'
+            }), 400
+        
+        print(f"📊 查询视频任务进度: {task_id}")
+        cogvideo_api = api_clients['cogvideo']
+        result = cogvideo_api.query_task_status(task_id)
+        
+        print(f"📋 任务进度查询结果: {result}")
+        
+        # 根据任务状态添加详细进度信息
+        if result.get('success'):
+            if result.get('status') == 'processing':
+                # 为处理中的任务添加估算进度
+                # 可以根据任务创建时间来估算进度
+                result['progress'] = {
+                    'percentage': 60,  # 估算60%
+                    'message': '视频正在生成中，请耐心等待...',
+                    'estimated_time': '预计还需2-5分钟',
+                    'current_stage': '视频渲染中'
+                }
+            elif result.get('status') == 'completed':
+                result['progress'] = {
+                    'percentage': 100,
+                    'message': '视频生成完成！',
+                    'estimated_time': '已完成',
+                    'current_stage': '完成'
+                }
+        
+        return jsonify(result)
+        
+    except Exception as e:
+        error_msg = f'查询视频任务进度时发生异常: {str(e)}'
+        print(f"❌ 进度查询异常: {error_msg}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({
+            'error': error_msg,
+            'status': 'error'
+        }), 500
 
 if __name__ == '__main__':
     from config import APP_CONFIG

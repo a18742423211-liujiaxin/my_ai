@@ -109,51 +109,62 @@ class QwenThinkingAPI:
                     # 处理usage信息
                     if hasattr(chunk, 'usage') and chunk.usage:
                         yield {
+                            "type": "usage",
                             "usage": chunk.usage
                         }
                     continue
                 
                 delta = chunk.choices[0].delta
                 
-                # 处理思考内容 - 在回答开始前输出思考过程
+                # 处理思考内容 - 实时输出每一小段思考过程
                 if hasattr(delta, "reasoning_content") and delta.reasoning_content is not None:
                     reasoning_content += delta.reasoning_content
-                    print(f"[DEBUG] 收到思考内容: {delta.reasoning_content[:50]}...")  # 调试日志
-                    if not is_answering:  # 只在还没开始回答时显示思考过程
-                        yield {
-                            "choices": [{
-                                "delta": {
-                                    "reasoning_content": delta.reasoning_content
-                                }
-                            }]
-                        }
+                    print(f"[DEBUG] 实时发送思考内容: {delta.reasoning_content[:50]}...")  # 调试日志
+                    
+                    # 实时发送思考内容，不论是否在回答阶段
+                    yield {
+                        "type": "thinking",
+                        "content": delta.reasoning_content,
+                        "total_length": len(reasoning_content)
+                    }
                 
                 # 处理回答内容
                 if hasattr(delta, "content") and delta.content:
                     if not is_answering:
                         is_answering = True
                         print(f"[DEBUG] 开始回答，思考内容总长度: {len(reasoning_content)}")  # 调试日志
-                        # 标记思考阶段结束，开始回答
+                        
+                        # 发送思考阶段结束信号
                         yield {
-                            "phase_change": "answer_start"
+                            "type": "thinking_end",
+                            "thinking_summary": reasoning_content
                         }
                     
                     answer_content += delta.content
+                    print(f"[DEBUG] 实时发送回答内容: {delta.content[:30]}...")  # 调试日志
+                    
+                    # 实时发送回答内容
                     yield {
-                        "choices": [{
-                            "delta": {
-                                "content": delta.content
-                            }
-                        }]
+                        "type": "content",
+                        "content": delta.content,
+                        "total_length": len(answer_content)
                     }
             
-            # 结束时输出一个汇总
+            # 发送完成信号
+            print(f"[DEBUG] 流式传输完成 - 思考: {len(reasoning_content)}字符, 回答: {len(answer_content)}字符")
             yield {
+                "type": "done",
                 "summary": {
-                    "reasoning": reasoning_content if reasoning_content else None,
-                    "answer": answer_content if answer_content else None
+                    "thinking": reasoning_content if reasoning_content else None,
+                    "answer": answer_content if answer_content else None,
+                    "thinking_length": len(reasoning_content),
+                    "answer_length": len(answer_content)
                 }
             }
             
         except Exception as e:
-            yield {"error": f"流式响应处理失败: {str(e)}"} 
+            print(f"[ERROR] 流式响应处理异常: {str(e)}")
+            yield {
+                "type": "error",
+                "error": f"流式响应处理失败: {str(e)}"
+            } 

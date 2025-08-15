@@ -16,11 +16,18 @@
     
     <div class="form-group">
         <label class="form-label">图像尺寸</label>
-        <select class="form-control" id="imageSize">
-            <option value="1024*1024">正方形 (1024×1024)</option>
-            <option value="1344*768">横向 (1344×768)</option>
-            <option value="768*1344">纵向 (768×1344)</option>
-        </select>
+        <div class="button-group">
+            <button class="option-btn active" data-size="1024*1024">
+                <i class="fas fa-square"></i> 正方形 (1024×1024)
+            </button>
+            <button class="option-btn" data-size="1344*768">
+                <i class="fas fa-expand-arrows-alt"></i> 横向 (1344×768)
+            </button>
+            <button class="option-btn" data-size="768*1344">
+                <i class="fas fa-arrows-alt-v"></i> 纵向 (768×1344)
+            </button>
+        </div>
+        <input type="hidden" id="imageSize" value="1024*1024">
     </div>
     
     <button class="btn" onclick="generateImage()">
@@ -29,7 +36,18 @@
     
     <div class="loading" id="imageLoading">
         <div class="spinner"></div>
-        <p>AI正在创作图像中，请耐心等待...</p>
+        <p id="imageLoadingText">AI正在创作图像中，请耐心等待...</p>
+        <!-- 添加进度条 -->
+        <div class="progress-container" id="imageProgressContainer" style="display: none;">
+            <div class="progress-bar">
+                <div class="progress-fill" id="imageProgressFill" style="width: 0%;"></div>
+            </div>
+            <div class="progress-info">
+                <span id="imageProgressPercent">0%</span>
+                <span id="imageProgressMessage">初始化中...</span>
+                <span id="imageProgressTime">准备中...</span>
+            </div>
+        </div>
     </div>
     
     <div class="result-container hidden" id="imageResult">

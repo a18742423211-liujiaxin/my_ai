@@ -351,7 +351,13 @@ class CogVideoAPI:
 								"task_id": task_id,
 								"model": result.get("model", self.config.get("model", "cogvideox-3")),
 								"request_id": result.get("request_id"),
-								"usage": result.get("usage", {})
+								"usage": result.get("usage", {}),
+								"progress": {
+									"percentage": 100,
+									"message": "视频生成完成！",
+									"estimated_time": "已完成",
+									"current_stage": "完成"
+								}
 							}
 						else:
 							return {
@@ -373,13 +379,15 @@ class CogVideoAPI:
 							"error_code": error_code
 						}
 					else:
-						# 任务处理中
+						# 任务处理中 - 添加智能进度估算
+						progress_info = self._calculate_video_progress(task_status)
 						return {
 							"success": True,
 							"status": "processing",
 							"task_id": task_id,
 							"task_status": task_status,
-							"message": "视频正在生成中，请稍后再查询"
+							"message": "视频正在生成中，请稍后再查询",
+							"progress": progress_info
 						}
 				else:
 					# 处理HTTP错误
@@ -486,6 +494,30 @@ class CogVideoAPI:
 			"error": f"经过{max_retries}次重试后仍然查询失败，请稍后重试",
 			"status": "error"
 		}
+	
+	def _calculate_video_progress(self, task_status):
+		"""计算视频生成进度"""
+		if task_status == "PENDING":
+			return {
+				"percentage": 20,
+				"message": "视频任务已排队...",
+				"estimated_time": "预计还需5-8分钟",
+				"current_stage": "排队等待中"
+			}
+		elif task_status == "PROCESSING":
+			return {
+				"percentage": 70,
+				"message": "AI正在渲染视频...",
+				"estimated_time": "预计还需2-4分钟",
+				"current_stage": "视频渲染中"
+			}
+		else:
+			return {
+				"percentage": 50,
+				"message": "视频处理中...",
+				"estimated_time": "预计还需3-6分钟",
+				"current_stage": "处理中"
+			}
 	
 	def get_supported_options(self):
 		"""获取支持的配置选项"""

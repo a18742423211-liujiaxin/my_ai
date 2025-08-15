@@ -16,27 +16,44 @@
     
     <div class="form-group">
         <label class="form-label">视频质量</label>
-        <select class="form-control" id="videoQuality">
-            <option value="speed">快速生成</option>
-            <option value="quality">高质量</option>
-        </select>
+        <div class="button-group">
+            <button class="option-btn active" data-quality="speed">
+                <i class="fas fa-bolt"></i> 快速生成
+            </button>
+            <button class="option-btn" data-quality="quality">
+                <i class="fas fa-gem"></i> 高质量
+            </button>
+        </div>
+        <input type="hidden" id="videoQuality" value="speed">
     </div>
     
     <div class="form-group">
         <label class="form-label">视频尺寸</label>
-        <select class="form-control" id="videoSize">
-            <option value="1920x1080">全高清 (1920×1080)</option>
-            <option value="1280x720">高清 (1280×720)</option>
-            <option value="720x480">标清 (720×480)</option>
-        </select>
+        <div class="button-group">
+            <button class="option-btn active" data-size="1920x1080">
+                <i class="fas fa-tv"></i> 全高清 (1920×1080)
+            </button>
+            <button class="option-btn" data-size="1280x720">
+                <i class="fas fa-desktop"></i> 高清 (1280×720)
+            </button>
+            <button class="option-btn" data-size="1024x1024">
+                <i class="fas fa-mobile-alt"></i> 方形 (1024×1024)
+            </button>
+        </div>
+        <input type="hidden" id="videoSize" value="1920x1080">
     </div>
     
     <div class="form-group">
         <label class="form-label">视频时长</label>
-        <select class="form-control" id="videoDuration">
-            <option value="5">5秒</option>
-            <option value="10">10秒</option>
-        </select>
+        <div class="button-group">
+            <button class="option-btn active" data-duration="5">
+                <i class="fas fa-clock"></i> 5秒
+            </button>
+            <button class="option-btn" data-duration="10">
+                <i class="fas fa-hourglass-half"></i> 10秒
+            </button>
+        </div>
+        <input type="hidden" id="videoDuration" value="5">
     </div>
     
     <button class="btn" onclick="generateVideo()">
@@ -45,7 +62,21 @@
     
     <div class="loading" id="videoLoading">
         <div class="spinner"></div>
-        <p>AI正在制作视频中，请耐心等待...</p>
+        <p id="videoLoadingText">AI正在制作视频中，请耐心等待...</p>
+        <!-- 添加进度条 -->
+        <div class="progress-container" id="videoProgressContainer" style="display: none;">
+            <div class="progress-bar">
+                <div class="progress-fill" id="videoProgressFill" style="width: 0%;"></div>
+            </div>
+            <div class="progress-info">
+                <span id="videoProgressPercent">0%</span>
+                <span id="videoProgressMessage">初始化中...</span>
+                <div class="progress-details">
+                    <span id="videoProgressStage">准备中...</span>
+                    <span id="videoProgressTime">预计时间: 计算中...</span>
+                </div>
+            </div>
+        </div>
     </div>
     
     <div class="result-container hidden" id="videoResult">

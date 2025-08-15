@@ -199,7 +199,12 @@ class WanxImageAPI:
                     "image_urls": image_urls,
                     "image_url": image_urls[0] if image_urls else None,
                     "task_id": task_id,
-                    "usage": usage
+                    "usage": usage,
+                    "progress": {
+                        "percentage": 100,
+                        "message": "图像生成完成！",
+                        "estimated_time": "已完成"
+                    }
                 }
             
             elif task_status == "FAILED":
@@ -213,12 +218,14 @@ class WanxImageAPI:
                 }
             
             elif task_status in ["PENDING", "RUNNING"]:
-                # 任务进行中
+                # 任务进行中 - 添加智能进度估算
+                progress_info = self._calculate_image_progress(task_status)
                 return {
                     "success": True,
                     "status": "running",
                     "task_id": task_id,
-                    "message": "任务正在处理中，请稍后再查询"
+                    "message": "任务正在处理中，请稍后再查询",
+                    "progress": progress_info
                 }
             
             else:
@@ -252,6 +259,27 @@ class WanxImageAPI:
                 "success": False,
                 "error": f"未知错误: {str(e)}",
                 "status": "error"
+            }
+    
+    def _calculate_image_progress(self, task_status):
+        """计算图像生成进度"""
+        if task_status == "PENDING":
+            return {
+                "percentage": 25,
+                "message": "任务已排队，等待处理...",
+                "estimated_time": "预计还需40-70秒"
+            }
+        elif task_status == "RUNNING":
+            return {
+                "percentage": 65,
+                "message": "AI正在创作图像中...",
+                "estimated_time": "预计还需20-40秒"
+            }
+        else:
+            return {
+                "percentage": 50,
+                "message": "处理中...",
+                "estimated_time": "请稍候..."
             }
     
     def chat(self, messages, **kwargs):
