@@ -444,13 +444,13 @@
 
                 <div class="input-area">
                     <div class="input-group">
-                        <div class="input-controls">
-                            <div class="deep-search-control">
-                                <input type="checkbox" id="deepThinking" />
-                                <label for="deepThinking">深度思考</label>
+                                                    <div class="input-controls">
+                                <div class="deep-search-control" style="display:none;">
+                                    <input type="checkbox" id="deepThinking" />
+                                    <label for="deepThinking">深度思考</label>
+                                </div>
+                                <button type="button" class="clear-btn" onclick="clearChat()">清除对话</button>
                             </div>
-                            <button type="button" class="clear-btn" onclick="clearChat()">清除对话</button>
-                        </div>
                         <textarea 
                             id="messageInput" 
                             class="message-input" 
@@ -542,21 +542,14 @@
         function toggleDeepSearchVisibility() {
             const selectedModel = document.getElementById('modelSelect').value;
             const deepSearchControl = document.querySelector('.deep-search-control');
-            
-            // 只有通义千问深度思考模式需要显示深度思考选项
-            if (selectedModel === 'qwen_thinking') {
-                if (deepSearchControl) {
-                    deepSearchControl.style.display = 'flex';
-                }
-            } else {
-                if (deepSearchControl) {
-                    deepSearchControl.style.display = 'none';
-                    // 重置深度思考选项
-                    const deepThinking = document.getElementById('deepThinking');
-                    if (deepThinking) {
-                        deepThinking.checked = false;
-                    }
-                }
+
+            // 已选择深度思考模型时自动开启，无需勾选，且隐藏控件
+            if (deepSearchControl) {
+                deepSearchControl.style.display = 'none';
+            }
+            const deepThinking = document.getElementById('deepThinking');
+            if (deepThinking) {
+                deepThinking.checked = (selectedModel === 'qwen_thinking');
             }
         }
 
@@ -599,7 +592,6 @@
             const input = document.getElementById('messageInput');
             const message = input.value.trim();
             const model = document.getElementById('modelSelect').value;
-            const deepThinking = document.getElementById('deepThinking').checked;
             
             if (!message || isLoading) return;
             
@@ -611,7 +603,7 @@
             input.value = '';
             
             // 根据模型选择合适的发送方式
-            if (model === 'qwen_thinking' && deepThinking) {
+            if (model === 'qwen_thinking') {
                 // 深度思考模式使用流式响应
                 await sendStreamMessage(message, model);
             } else {
