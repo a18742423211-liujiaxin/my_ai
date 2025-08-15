@@ -131,6 +131,27 @@
             left: 100%;
         }
 
+        /* 激活状态的导航链接 */
+        .nav-link.active {
+            color: var(--primary-color) !important;
+            background: var(--glass-bg) !important;
+            border: 1px solid var(--primary-color) !important;
+            box-shadow: 0 0 20px var(--primary-color) !important;
+            transform: translateY(-2px);
+        }
+
+        .nav-link.active::before {
+            left: 100%;
+        }
+
+        /* 确保激活状态在hover时保持 */
+        .nav-link.active:hover {
+            color: var(--primary-color) !important;
+            background: var(--glass-bg) !important;
+            border: 1px solid var(--primary-color) !important;
+            box-shadow: 0 0 25px var(--primary-color) !important;
+        }
+
         /* 移动端菜单按钮 */
         .mobile-menu-btn {
             display: none;
@@ -355,6 +376,37 @@
 
         select.form-control {
             cursor: pointer;
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 1rem center;
+            background-size: 1em;
+            padding-right: 2.5rem;
+        }
+
+        select.form-control option {
+            background-color: var(--bg-dark);
+            color: var(--text-primary);
+            padding: 0.5rem;
+        }
+
+        /* 确保下拉列表在打开时有正确的样式 */
+        select.form-control:focus option:checked {
+            background-color: var(--primary-color);
+            color: var(--bg-dark);
+        }
+
+        select.form-control:focus option:hover {
+            background-color: var(--secondary-color);
+            color: var(--bg-dark);
+        }
+
+        select.form-control:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 10px var(--border-glow);
         }
 
         .btn {
@@ -722,8 +774,53 @@
                 link.classList.remove('active');
             });
             
+            // 根据pageId找到对应的导航链接并激活
+            const pageToNavMap = {
+                'home': '首页',
+                'chat': 'AI对话', 
+                'image': '文生图',
+                'video': '视频生成'
+            };
+            
+            document.querySelectorAll('.nav-link').forEach(link => {
+                const linkText = link.textContent.trim();
+                if (linkText.includes(pageToNavMap[pageId])) {
+                    link.classList.add('active');
+                }
+            });
+            
             // 关闭移动端菜单
             document.getElementById('navMenu').classList.remove('active');
+            
+            // 确保当前页面的下拉列表正常工作
+            if (pageId === 'chat') {
+                ensureChatModelSelect();
+            }
+        }
+
+        // 确保聊天模型选择器正常工作
+        function ensureChatModelSelect() {
+            const chatModelSelect = document.getElementById('chatModel');
+            if (chatModelSelect) {
+                // 清除可能存在的重复选项
+                const options = chatModelSelect.querySelectorAll('option');
+                const seenValues = new Set();
+                const seenTexts = new Set();
+                
+                options.forEach(option => {
+                    if (seenValues.has(option.value) || seenTexts.has(option.textContent)) {
+                        option.remove();
+                    } else {
+                        seenValues.add(option.value);
+                        seenTexts.add(option.textContent);
+                    }
+                });
+                
+                // 确保有默认选择
+                if (chatModelSelect.value === '') {
+                    chatModelSelect.value = 'qwen_normal';
+                }
+            }
         }
 
         // 移动端菜单切换
@@ -760,15 +857,21 @@
                     })
                 });
                 
-                const data = await res.json();
+                if (!res.ok) {
+                    throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+                }
                 
-                if (data.success) {
+                const data = await res.json();
+                console.log('聊天响应数据:', data);
+                
+                if (data.status === 'success') {
                     response.innerHTML = data.response.replace(/\n/g, '<br>');
                     result.classList.remove('hidden');
                 } else {
-                    alert('发送失败：' + data.error);
+                    alert('发送失败：' + (data.error || '未知错误'));
                 }
             } catch (error) {
+                console.error('聊天请求失败:', error);
                 alert('发送失败：' + error.message);
             } finally {
                 loading.style.display = 'none';
@@ -804,7 +907,12 @@
                     })
                 });
                 
+                if (!res.ok) {
+                    throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+                }
+                
                 const data = await res.json();
+                console.log('图像生成响应数据:', data);
                 
                 if (data.success) {
                     image.src = data.image_url;
@@ -813,6 +921,7 @@
                     alert('生成失败：' + data.error);
                 }
             } catch (error) {
+                console.error('图像生成失败:', error);
                 alert('生成失败：' + error.message);
             } finally {
                 loading.style.display = 'none';
@@ -855,15 +964,21 @@
                     })
                 });
                 
-                const data = await res.json();
+                if (!res.ok) {
+                    throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+                }
                 
-                if (data.success) {
+                const data = await res.json();
+                console.log('视频任务创建响应数据:', data);
+                
+                if (data.task_id && !data.error) {
                     // 轮询检查任务状态
                     checkVideoStatus(data.task_id);
                 } else {
-                    throw new Error(data.error);
+                    throw new Error(data.error || '创建视频任务失败');
                 }
             } catch (error) {
+                console.error('视频生成失败:', error);
                 alert('生成失败：' + error.message);
                 loading.style.display = 'none';
             }
@@ -877,7 +992,13 @@
             
             try {
                 const res = await fetch(`/video-task-status/${taskId}`);
+                
+                if (!res.ok) {
+                    throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+                }
+                
                 const data = await res.json();
+                console.log('视频状态查询响应数据:', data);
                 
                 if (data.success) {
                     if (data.status === 'completed') {
@@ -885,7 +1006,7 @@
                         result.classList.remove('hidden');
                         loading.style.display = 'none';
                     } else if (data.status === 'failed') {
-                        throw new Error(data.message || '视频生成失败');
+                        throw new Error(data.error || data.message || '视频生成失败');
                     } else {
                         // 继续轮询
                         setTimeout(() => checkVideoStatus(taskId), 5000);
@@ -894,6 +1015,7 @@
                     throw new Error(data.error);
                 }
             } catch (error) {
+                console.error('视频状态查询失败:', error);
                 alert('检查状态失败：' + error.message);
                 loading.style.display = 'none';
             }
@@ -913,6 +1035,9 @@
         document.addEventListener('DOMContentLoaded', function() {
             // 默认显示首页
             showPage('home');
+            
+            // 确保下拉列表正常工作
+            ensureChatModelSelect();
         });
     </script>
 </body>
