@@ -318,6 +318,56 @@
         .loading { text-align: center; color: var(--text-dim); font-style: italic; padding: 20px; }
         .error-message { background: rgba(239,68,68,0.12); color: #fecaca; padding: 15px; border-radius: 8px; border-left: 4px solid #ef4444; margin: 10px 0; }
 
+        /* Sidebar 功能区视觉优化 */
+        .features-section, .text-to-image-section {
+            position: relative;
+            overflow: hidden;
+        }
+        .features-section::before, .text-to-image-section::before {
+            content: "";
+            position: absolute;
+            left: 12px;
+            right: 12px;
+            top: 0;
+            height: 2px;
+            border-radius: 999px;
+            background: linear-gradient(90deg, var(--secondary), var(--primary));
+            opacity: 0.6;
+        }
+        .features-section h3, .text-to-image-section h3 {
+            font-weight: 800;
+            letter-spacing: 0.3px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 12px;
+        }
+        .features-section h3::before { content: "🛠️"; }
+        .text-to-image-section h3::before { content: "🎨"; }
+
+        /* 侧边栏清除按钮弱化，避免过于抢眼 */
+        .features-section .clear-btn {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-dim);
+            box-shadow: none;
+            padding: 8px 12px;
+        }
+        .features-section .clear-btn:hover {
+            border-color: rgba(239,68,68,0.6);
+            background: rgba(239,68,68,0.12);
+            color: #fecaca;
+        }
+
+        /* 选择器细节优化 */
+        .model-selector select, .image-options select {
+            backdrop-filter: blur(6px);
+        }
+
         @media (max-width: 768px) {
             .container { flex-direction: column; height: 100vh; max-height: 100vh; }
             .sidebar { width: 100%; height: auto; border-right: none; border-bottom: 1px solid var(--border-soft); padding: 20px; flex-shrink: 0; }
@@ -346,6 +396,7 @@
             <div class="features-section">
                 <h3>对话功能</h3>
                 <button class="clear-btn" onclick="clearChat()">清除对话</button>
+                <div style="margin-top:10px;font-size:12px;color:var(--text-dim);">快速重置当前会话内容</div>
             </div>
 
             <div class="text-to-image-section">
@@ -357,7 +408,7 @@
                         placeholder="请描述您想要生成的图片内容..."
                     ></textarea>
                     <div class="image-options">
-                        <select id="imageStyle">
+                        <select id="imageStyle" title="选择图像风格">
                             <option value="<auto>">自动风格</option>
                         </select>
                         <select id="imageSize">
