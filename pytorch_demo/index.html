@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PyTorch 学习展示平台</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <i class="fab fa-python"></i>
+                <span>PyTorch 学习平台</span>
+            </div>
+            <div class="nav-menu" id="navMenu">
+                <a href="#home" class="nav-link">首页</a>
+                <a href="#tutorials" class="nav-link">教程</a>
+                <a href="#demos" class="nav-link">演示</a>
+                <a href="#playground" class="nav-link">实验室</a>
+                <a href="#resources" class="nav-link">资源</a>
+            </div>
+            <div class="nav-toggle" id="navToggle">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主页面区域 -->
+    <section id="home" class="hero">
+        <div class="hero-container">
+            <div class="hero-content">
+                <h1 class="hero-title">
+                    掌握 <span class="gradient-text">PyTorch</span> 深度学习
+                </h1>
+                <p class="hero-subtitle">
+                    从零开始学习PyTorch，通过交互式演示和可视化理解深度学习的核心概念
+                </p>
+                <div class="hero-buttons">
+                    <button class="btn btn-primary" onclick="scrollToSection('tutorials')">
+                        <i class="fas fa-graduation-cap"></i>
+                        开始学习
+                    </button>
+                    <button class="btn btn-secondary" onclick="scrollToSection('demos')">
+                        <i class="fas fa-play"></i>
+                        查看演示
+                    </button>
+                </div>
+                <div class="hero-stats">
+                    <div class="stat-item">
+                        <span class="stat-number">3</span>
+                        <span class="stat-label">核心教程</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number">∞</span>
+                        <span class="stat-label">可能性</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number">100%</span>
+                        <span class="stat-label">实践操作</span>
+                    </div>
+                </div>
+            </div>
+            <div class="hero-visual">
+                <div class="neural-network-animation">
+                    <div class="layer input-layer">
+                        <div class="neuron"></div>
+                        <div class="neuron"></div>
+                        <div class="neuron"></div>
+                    </div>
+                    <div class="layer hidden-layer">
+                        <div class="neuron"></div>
+                        <div class="neuron"></div>
+                        <div class="neuron"></div>
+                        <div class="neuron"></div>
+                    </div>
+                    <div class="layer output-layer">
+                        <div class="neuron"></div>
+                        <div class="neuron"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 教程区域 -->
+    <section id="tutorials" class="tutorials">
+        <div class="container">
+            <h2 class="section-title">学习路径</h2>
+            <div class="tutorials-grid">
+                <div class="tutorial-card" data-tutorial="basic">
+                    <div class="tutorial-icon">
+                        <i class="fas fa-cube"></i>
+                    </div>
+                    <h3>基础操作</h3>
+                    <p>学习PyTorch张量的创建、操作和基本运算</p>
+                    <div class="tutorial-progress">
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 100%"></div>
+                        </div>
+                        <span class="progress-text">完成度: 100%</span>
+                    </div>
+                    <button class="btn btn-outline" onclick="openTutorial('basic')">
+                        <i class="fas fa-play"></i>
+                        开始学习
+                    </button>
+                </div>
+
+                <div class="tutorial-card" data-tutorial="regression">
+                    <div class="tutorial-icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <h3>线性回归</h3>
+                    <p>理解机器学习的基础 - 线性回归模型</p>
+                    <div class="tutorial-progress">
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 100%"></div>
+                        </div>
+                        <span class="progress-text">完成度: 100%</span>
+                    </div>
+                    <button class="btn btn-outline" onclick="openTutorial('regression')">
+                        <i class="fas fa-play"></i>
+                        开始学习
+                    </button>
+                </div>
+
+                <div class="tutorial-card" data-tutorial="neural-network">
+                    <div class="tutorial-icon">
+                        <i class="fas fa-brain"></i>
+                    </div>
+                    <h3>神经网络</h3>
+                    <p>构建和训练多层神经网络模型</p>
+                    <div class="tutorial-progress">
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 100%"></div>
+                        </div>
+                        <span class="progress-text">完成度: 100%</span>
+                    </div>
+                    <button class="btn btn-outline" onclick="openTutorial('neural-network')">
+                        <i class="fas fa-play"></i>
+                        开始学习
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 演示区域 -->
+    <section id="demos" class="demos">
+        <div class="container">
+            <h2 class="section-title">交互式演示</h2>
+            
+            <!-- 张量可视化 -->
+            <div class="demo-section">
+                <h3>张量可视化</h3>
+                <div class="demo-content">
+                    <div class="demo-controls">
+                        <div class="control-group">
+                            <label>张量形状:</label>
+                            <select id="tensorShape" onchange="updateTensorVisualization()">
+                                <option value="1d">1D (向量)</option>
+                                <option value="2d" selected>2D (矩阵)</option>
+                                <option value="3d">3D (立体)</option>
+                            </select>
+                        </div>
+                        <div class="control-group">
+                            <label>张量大小:</label>
+                            <input type="range" id="tensorSize" min="2" max="10" value="5" 
+                                   onchange="updateTensorVisualization()">
+                            <span id="tensorSizeValue">5</span>
+                        </div>
+                        <button class="btn btn-primary" onclick="generateRandomTensor()">
+                            <i class="fas fa-random"></i>
+                            随机生成
+                        </button>
+                    </div>
+                    <div class="demo-visual">
+                        <div id="tensorVisualization"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 线性回归演示 -->
+            <div class="demo-section">
+                <h3>线性回归训练</h3>
+                <div class="demo-content">
+                    <div class="demo-controls">
+                        <div class="control-group">
+                            <label>学习率:</label>
+                            <input type="range" id="learningRate" min="0.001" max="0.1" step="0.001" value="0.01">
+                            <span id="learningRateValue">0.01</span>
+                        </div>
+                        <div class="control-group">
+                            <label>训练轮数:</label>
+                            <input type="range" id="epochs" min="10" max="1000" step="10" value="100">
+                            <span id="epochsValue">100</span>
+                        </div>
+                        <div class="control-group">
+                            <label>数据点数:</label>
+                            <input type="range" id="dataPoints" min="20" max="200" step="10" value="50">
+                            <span id="dataPointsValue">50</span>
+                        </div>
+                        <button class="btn btn-primary" onclick="startRegressionTraining()" id="trainBtn">
+                            <i class="fas fa-play"></i>
+                            开始训练
+                        </button>
+                        <button class="btn btn-secondary" onclick="resetRegression()">
+                            <i class="fas fa-refresh"></i>
+                            重置
+                        </button>
+                    </div>
+                    <div class="demo-visual">
+                        <div id="regressionPlot"></div>
+                        <div class="training-metrics">
+                            <div class="metric">
+                                <span class="metric-label">当前轮数:</span>
+                                <span class="metric-value" id="currentEpoch">0</span>
+                            </div>
+                            <div class="metric">
+                                <span class="metric-label">损失值:</span>
+                                <span class="metric-value" id="currentLoss">0.000</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 神经网络结构 -->
+            <div class="demo-section">
+                <h3>神经网络结构设计</h3>
+                <div class="demo-content">
+                    <div class="demo-controls">
+                        <div class="control-group">
+                            <label>输入层:</label>
+                            <input type="range" id="inputNodes" min="1" max="10" value="3" 
+                                   onchange="updateNetworkStructure()">
+                            <span id="inputNodesValue">3</span>
+                        </div>
+                        <div class="control-group">
+                            <label>隐藏层:</label>
+                            <input type="range" id="hiddenNodes" min="1" max="10" value="4" 
+                                   onchange="updateNetworkStructure()">
+                            <span id="hiddenNodesValue">4</span>
+                        </div>
+                        <div class="control-group">
+                            <label>输出层:</label>
+                            <input type="range" id="outputNodes" min="1" max="10" value="2" 
+                                   onchange="updateNetworkStructure()">
+                            <span id="outputNodesValue">2</span>
+                        </div>
+                        <div class="control-group">
+                            <label>激活函数:</label>
+                            <select id="activationFunction" onchange="updateNetworkStructure()">
+                                <option value="relu">ReLU</option>
+                                <option value="sigmoid">Sigmoid</option>
+                                <option value="tanh">Tanh</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="demo-visual">
+                        <div id="networkStructure"></div>
+                        <div class="network-info">
+                            <div class="info-item">
+                                <span class="info-label">总参数数量:</span>
+                                <span class="info-value" id="totalParams">0</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">网络深度:</span>
+                                <span class="info-value" id="networkDepth">3</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 实验室区域 -->
+    <section id="playground" class="playground">
+        <div class="container">
+            <h2 class="section-title">PyTorch 实验室</h2>
+            <div class="playground-content">
+                <div class="code-editor-section">
+                    <h3>代码编辑器</h3>
+                    <div class="editor-tabs">
+                        <button class="tab-btn active" onclick="switchTab('basic')">基础操作</button>
+                        <button class="tab-btn" onclick="switchTab('regression')">线性回归</button>
+                        <button class="tab-btn" onclick="switchTab('neural')">神经网络</button>
+                    </div>
+                    <div class="code-editor">
+                        <pre id="codeDisplay"><code># PyTorch 基础操作示例
+import torch
+import numpy as np
+
+# 创建张量
+x = torch.tensor([1, 2, 3, 4, 5])
+print(f"张量 x: {x}")
+print(f"张量形状: {x.shape}")
+print(f"张量数据类型: {x.dtype}")
+
+# 基本运算
+y = x * 2
+print(f"x * 2 = {y}")
+
+# 矩阵运算
+A = torch.randn(3, 4)
+B = torch.randn(4, 2)
+C = torch.matmul(A, B)
+print(f"矩阵乘法结果形状: {C.shape}")
+</code></pre>
+                    </div>
+                    <div class="editor-actions">
+                        <button class="btn btn-primary" onclick="runCode()">
+                            <i class="fas fa-play"></i>
+                            运行代码
+                        </button>
+                        <button class="btn btn-secondary" onclick="copyCode()">
+                            <i class="fas fa-copy"></i>
+                            复制代码
+                        </button>
+                        <button class="btn btn-outline" onclick="downloadCode()">
+                            <i class="fas fa-download"></i>
+                            下载代码
+                        </button>
+                    </div>
+                </div>
+                <div class="output-section">
+                    <h3>运行结果</h3>
+                    <div class="output-console" id="outputConsole">
+                        <div class="console-line">欢迎使用 PyTorch 实验室！</div>
+                        <div class="console-line">点击"运行代码"来执行 PyTorch 代码示例</div>
+                        <div class="console-line">您可以修改代码并观察结果变化</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 资源区域 -->
+    <section id="resources" class="resources">
+        <div class="container">
+            <h2 class="section-title">学习资源</h2>
+            <div class="resources-grid">
+                <div class="resource-card">
+                    <div class="resource-icon">
+                        <i class="fas fa-book"></i>
+                    </div>
+                    <h3>官方文档</h3>
+                    <p>PyTorch官方文档和教程</p>
+                    <a href="https://pytorch.org/docs/" target="_blank" class="btn btn-outline">
+                        <i class="fas fa-external-link-alt"></i>
+                        访问
+                    </a>
+                </div>
+                <div class="resource-card">
+                    <div class="resource-icon">
+                        <i class="fab fa-github"></i>
+                    </div>
+                    <h3>本地项目</h3>
+                    <p>运行本地PyTorch示例代码</p>
+                    <button class="btn btn-outline" onclick="openLocalProject()">
+                        <i class="fas fa-folder-open"></i>
+                        打开项目
+                    </button>
+                </div>
+                <div class="resource-card">
+                    <div class="resource-icon">
+                        <i class="fas fa-video"></i>
+                    </div>
+                    <h3>视频教程</h3>
+                    <p>深度学习和PyTorch视频课程</p>
+                    <a href="#" class="btn btn-outline">
+                        <i class="fas fa-play"></i>
+                        观看
+                    </a>
+                </div>
+                <div class="resource-card">
+                    <div class="resource-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <h3>社区</h3>
+                    <p>PyTorch社区论坛和讨论</p>
+                    <a href="https://discuss.pytorch.org/" target="_blank" class="btn btn-outline">
+                        <i class="fas fa-comments"></i>
+                        加入
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 页脚 -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <i class="fab fa-python"></i>
+                    <span>PyTorch 学习平台</span>
+                </div>
+                <div class="footer-links">
+                    <a href="#home">首页</a>
+                    <a href="#tutorials">教程</a>
+                    <a href="#demos">演示</a>
+                    <a href="#playground">实验室</a>
+                    <a href="#resources">资源</a>
+                </div>
+                <div class="project-info">
+                    <p>基于您的 PyTorch 学习项目构建</p>
+                    <p>包含: 基础操作 | 线性回归 | 神经网络</p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 PyTorch 学习平台. 让深度学习变得简单易懂。</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- 回到顶部按钮 -->
+    <button class="back-to-top" id="backToTop" onclick="scrollToTop()">
+        <i class="fas fa-arrow-up"></i>
+    </button>
+
+    <!-- 教程模态框 -->
+    <div class="modal" id="tutorialModal">
+        <div class="modal-content tutorial-modal-content">
+            <span class="close" onclick="closeTutorialModal()">&times;</span>
+            <h2 id="tutorialTitle">教程标题</h2>
+            <div id="tutorialContent">
+                <!-- 教程内容将在这里动态加载 -->
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html> 

@@ -1,0 +1,1222 @@
+
+
+通义方式：在第三方工具中调用模型
+
+
+阿里云百炼提供了多种深度思考模型的 API。最新的Qwen3系列模型推理能力强，回复速度快，推荐您优先使用Qwen3 模型。
+
+Qwen3QwQ（基于Qwen2.5）GLM-4.5DeepSeek-R1
+相比于上一代模型，Qwen3 模型的能力得到了大幅提升：
+
+推理能力：在数学、代码和逻辑推理等评测中，显著超过 QwQ 和同尺寸的非推理模型，达到同规模业界顶尖水平。
+
+人类偏好能力：创意写作、角色扮演、多轮对话、指令遵循能力均大幅提升，通用能力显著超过同尺寸模型。
+
+Agent 能力：在推理、非推理两种模式下都达到业界领先水平，能精准调用外部工具。
+
+多语言能力：支持100多种语言和方言，多语言翻译、指令理解、常识推理能力都明显提升。
+
+回复格式：修复了之前版本存在的回复格式的问题，如异常 Markdown、中间截断、错误输出 boxed 等问题。
+
+开源版模型商业版模型
+2025 年 7月发布的 qwen3-235b-a22b-thinking-2507 是qwen3-235b-a22b（思考模式）的升级版，逻辑能力、通用能力、知识增强及创作能力均有大幅提升，适用于高难度强推理场景。
+
+2025 年 7月发布的 qwen3-30b-a3b-thinking-2507 是qwen3-30b-a3b （思考模式）的升级版，复杂推理类任务性能优秀，指令遵循、文本理解、多语言翻译等能力显著提高，适用于包括逻辑推理、数学、科学、代码类等具有一定难度的任务场景。
+
+2025 年 4月发布的 Qwen3 模型支持思考模式和非思考模式，您可以通过 enable_thinking 参数实现两种模式的切换。
+
+Qwen3 开源模型默认开启思考模式，如需关闭，请设置enable_thinking 为 false。
+开启enable_thinking有极小概率不会输出思考过程。
+Qwen3 开源模型在思考模式下不支持非流式输出方式。
+模型名称
+
+上下文长度
+
+最大输入
+
+最大思维链长度
+
+最大回复长度
+
+输入成本
+
+输出成本
+
+免费额度
+
+（注）
+
+（Token数）
+
+（每千Token）
+
+qwen3-235b-a22b-thinking-2507
+
+131,072
+
+126,976
+
+81,920
+
+32,768
+
+0.002元
+
+0.02元
+
+各100万 Token
+
+有效期：百炼开通后180天内
+
+qwen3-30b-a3b-thinking-2507
+
+0.00075元
+
+0.0075元
+
+qwen3-235b-a22b
+
+本模型与以下模型均于2025 年 4月发布
+98,304
+
+38,912
+
+16,384
+
+0.002元
+
+0.02元
+
+qwen3-32b
+
+qwen3-30b-a3b
+
+0.00075元
+
+0.0075元
+
+qwen3-14b
+
+8,192
+
+0.001元
+
+0.01元
+
+qwen3-8b
+
+0.0005元
+
+0.005元
+
+qwen3-4b
+
+0.0003元
+
+0.003元
+
+qwen3-1.7b
+
+32,768
+
+28,672
+
+与输入相加不超过30,720
+
+qwen3-0.6b
+
+并发限流请参考限流。
+快速开始
+API 使用前提：已获取API Key并完成配置API Key到环境变量。如果通过SDK调用，需要安装 OpenAI 或 DashScope SDK（DashScope Java SDK 版本需要不低于2.19.4）。
+
+您可以运行以下代码，通过流式输出的方式调用深度思考模型。通过响应的reasoning_content字段获取思考过程，content字段获取回复内容。
+
+OpenAI兼容DashScope
+PythonNode.jsHTTP
+示例代码
+ 
+from openai import OpenAI
+import os
+
+# 初始化OpenAI客户端
+client = OpenAI(
+    # 如果没有配置环境变量，请用阿里云百炼API Key替换：api_key="sk-xxx"
+    api_key=os.getenv("DASHSCOPE_API_KEY"),
+    base_url="https://dashscope.aliyuncs.com/compatible-mode/v1",
+)
+
+messages = [{"role": "user", "content": "你是谁"}]
+
+completion = client.chat.completions.create(
+    model="qwen-plus-2025-04-28",  # 您可以按需更换为其它深度思考模型
+    messages=messages,
+    # enable_thinking 参数开启思考过程，qwen3-30b-a3b-thinking-2507、qwen3-235b-a22b-thinking-2507、QwQ 与 DeepSeek-R1 模型总会进行思考，不支持该参数
+    extra_body={"enable_thinking": True},
+    stream=True,
+    # stream_options={
+    #     "include_usage": True
+    # },
+)
+
+reasoning_content = ""  # 完整思考过程
+answer_content = ""  # 完整回复
+is_answering = False  # 是否进入回复阶段
+print("\n" + "=" * 20 + "思考过程" + "=" * 20 + "\n")
+
+for chunk in completion:
+    if not chunk.choices:
+        print("\nUsage:")
+        print(chunk.usage)
+        continue
+
+    delta = chunk.choices[0].delta
+
+    # 只收集思考内容
+    if hasattr(delta, "reasoning_content") and delta.reasoning_content is not None:
+        if not is_answering:
+            print(delta.reasoning_content, end="", flush=True)
+        reasoning_content += delta.reasoning_content
+
+    # 收到content，开始进行回复
+    if hasattr(delta, "content") and delta.content:
+        if not is_answering:
+            print("\n" + "=" * 20 + "完整回复" + "=" * 20 + "\n")
+            is_answering = True
+        print(delta.content, end="", flush=True)
+        answer_content += delta.content
+返回结果
+ 
+====================思考过程====================
+
+好的，用户问“你是谁”，我需要给出一个准确且友好的回答。首先，我要确认自己的身份，即通义千问，由阿里巴巴集团旗下的通义实验室研发。接下来，应该说明我的主要功能，比如回答问题、创作文字、逻辑推理等。同时，要保持语气亲切，避免过于技术化，让用户感觉轻松。还要注意不要使用复杂术语，确保回答简洁明了。另外，可能需要加入一些互动元素，邀请用户提问，促进进一步交流。最后，检查是否有遗漏的重要信息，比如我的中文名称“通义千问”和英文名称“Qwen”，以及所属公司和实验室。确保回答全面且符合用户期望。
+====================完整回复====================
+
+你好！我是通义千问，是阿里巴巴集团旗下的通义实验室自主研发的超大规模语言模型。我可以回答问题、创作文字、进行逻辑推理、编程等，旨在为用户提供高质量的信息和服务。你可以叫我Qwen，或者直接叫我通义千问。有什么我可以帮你的吗？
+多轮对话
+大模型 API 默认不会记录您的历史对话信息。多轮对话功能可以让大模型“拥有记忆”，满足如追问、信息采集等需要连续交流的场景。深度思考模型会返回reasoning_content（思考过程）与content（回复内容）字段，您可以将content字段通过{'role': 'assistant', 'content':响应的content字段}的形式添加到上下文中，无需添加reasoning_content字段。
+
+OpenAI兼容DashScope
+您可以通过 OpenAI SDK 或 OpenAI 兼容的 HTTP 方式使用多轮对话功能。
+
+PythonNode.jsHTTP
+示例代码
+ 
+from openai import OpenAI
+import os
+
+# 初始化OpenAI客户端
+client = OpenAI(
+    # 如果没有配置环境变量，请用阿里云百炼API Key替换：api_key="sk-xxx"
+    api_key = os.getenv("DASHSCOPE_API_KEY"),
+    base_url="https://dashscope.aliyuncs.com/compatible-mode/v1"
+)
+
+reasoning_content = ""  # 定义完整思考过程
+answer_content = ""     # 定义完整回复
+
+messages = []
+conversation_idx = 1
+while True:
+    is_answering = False   # 判断是否结束思考过程并开始回复
+    print("="*20+f"第{conversation_idx}轮对话"+"="*20)
+    conversation_idx += 1
+    user_msg = {"role": "user", "content": input("请输入你的消息：")}
+    messages.append(user_msg)
+    # 创建聊天完成请求
+    completion = client.chat.completions.create(
+        # 您可以按需更换为其它深度思考模型
+        model="qwen-plus-2025-04-28",
+        messages=messages,
+        # enable_thinking 参数开启思考过程，qwen3-30b-a3b-thinking-2507、qwen3-235b-a22b-thinking-2507、QwQ 与 DeepSeek-R1 模型总会进行思考，不支持该参数
+        extra_body={"enable_thinking": True},
+        stream=True,
+        # stream_options={
+        #     "include_usage": True
+        # }
+    )
+    print("\n" + "=" * 20 + "思考过程" + "=" * 20 + "\n")
+    for chunk in completion:
+        # 如果chunk.choices为空，则打印usage
+        if not chunk.choices:
+            print("\nUsage:")
+            print(chunk.usage)
+        else:
+            delta = chunk.choices[0].delta
+            # 打印思考过程
+            if hasattr(delta, 'reasoning_content') and delta.reasoning_content != None:
+                print(delta.reasoning_content, end='', flush=True)
+                reasoning_content += delta.reasoning_content
+            else:
+                # 开始回复
+                if delta.content != "" and is_answering is False:
+                    print("\n" + "=" * 20 + "完整回复" + "=" * 20 + "\n")
+                    is_answering = True
+                # 打印回复过程
+                print(delta.content, end='', flush=True)
+                answer_content += delta.content
+    # 将模型回复的content添加到上下文中
+    messages.append({"role": "assistant", "content": answer_content})
+    print("\n")
+限制思考长度
+深度思考模型有时会输出冗长的推理过程，需要较长时间才能进行回复内容的生成，且会消耗较多 Token。为了解决这一问题，您可以设置thinking_budget参数来约束推理过程的最大长度。
+
+如果模型思考过程生成的 Token 数超过thinking_budget，推理内容会进行截断并立刻开始生成最终回复内容。
+该参数支持 Qwen3（思考模式）与 GLM-4.5模型。
+OpenAI兼容DashScope
+PythonNode.jsHTTP
+示例代码
+ 
+from openai import OpenAI
+import os
+
+# 初始化OpenAI客户端
+client = OpenAI(
+    # 如果没有配置环境变量，请用阿里云百炼API Key替换：api_key="sk-xxx"
+    api_key=os.getenv("DASHSCOPE_API_KEY"),
+    base_url="https://dashscope.aliyuncs.com/compatible-mode/v1",
+)
+
+messages = [{"role": "user", "content": "你是谁"}]
+
+completion = client.chat.completions.create(
+    model="qwen-plus-2025-04-28",  # 您可以按需更换为其它深度思考模型
+    messages=messages,
+    # enable_thinking 参数开启思考过程，thinking_budget 参数设置最大推理过程 Token 数
+    # enable_thinking对qwen3-30b-a3b-thinking-2507、qwen3-235b-a22b-thinking-2507、 QwQ 与 DeepSeek-R1模型无效，thinking_bugget对 QwQ与 DeepSeek-R1模型无效
+    extra_body={
+        "enable_thinking": True,
+        "thinking_budget": 50
+        },
+    stream=True,
+    # stream_options={
+    #     "include_usage": True
+    # },
+)
+
+reasoning_content = ""  # 完整思考过程
+answer_content = ""  # 完整回复
+is_answering = False  # 是否进入回复阶段
+print("\n" + "=" * 20 + "思考过程" + "=" * 20 + "\n")
+
+for chunk in completion:
+    if not chunk.choices:
+        print("\nUsage:")
+        print(chunk.usage)
+        continue
+
+    delta = chunk.choices[0].delta
+
+    # 只收集思考内容
+    if hasattr(delta, "reasoning_content") and delta.reasoning_content is not None:
+        if not is_answering:
+            print(delta.reasoning_content, end="", flush=True)
+        reasoning_content += delta.reasoning_content
+
+    # 收到content，开始进行回复
+    if hasattr(delta, "content") and delta.content:
+        if not is_answering:
+            print("\n" + "=" * 20 + "完整回复" + "=" * 20 + "\n")
+            is_answering = True
+        print(delta.content, end="", flush=True)
+        answer_content += delta.content
+返回结果
+ 
+====================思考过程====================
+
+好的，用户问“你是谁”，我需要给出一个清晰且友好的回答。首先，应该明确自己的身份，即通义千问，由阿里巴巴集团旗下的通义实验室研发。接下来，要说明自己的主要功能，比如回答
+====================完整回复====================
+
+我是通义千问，是阿里巴巴集团旗下的通义实验室研发的超大规模语言模型。我能够回答问题、创作文字、逻辑推理、编程等，旨在为用户提供帮助和便利。有什么我可以帮您的吗？
+联网搜索
+由于训练数据的时效性，大模型无法准确回答如股票价格、今日资讯等时效性问题。您可以通过设置enable_search参数为true以启用联网检索功能，使大模型可以基于实时检索数据进行回复。
+
+仅 Qwen3 商业版模型、QwQ 商业版模型（除了qwq-plus-2025-03-05）支持联网搜索。
+
+开启enable_search后，模型会先判断是否需要使用联网搜索能力来回答您的问题：
+
+需要联网搜索
+
+当问题被模型判断需要使用联网搜索能力，模型会根据联网搜索的结果进行回复。
+
+联网搜索功能当前免费，但搜索到的信息会增加 Token 消耗。
+不需要联网搜索
+
+模型本身已经可以回答如“你是谁”、“一年有多少天”等简单或常识性的问题。此时模型不会去联网搜索，而是直接进行回答。
+
+如果您希望强制开启联网搜索功能，请参见下文的forced_search参数。
+在设置enable_search参数为true后，您可以通过search_options参数来配置联网搜索策略，包括以下方面：
+
+是否强制联网搜索是否返回搜索来源开启角标标注搜索数量
+通过forced_search配置，可选值：
+
+true
+
+强制开启。
+
+false（默认值）
+
+不强制开启。
+
+DashScopeOpenAI兼容
+PythonJavaHTTP
+示例代码
+ 
+import os
+import dashscope
+
+messages = [
+    {'role': 'user', 'content': '哪吒2的票房'}
+]
+
+response = dashscope.Generation.call(
+    # 若没有配置环境变量，请用阿里云百炼API Key将下行替换为：api_key="sk-xxx"
+    api_key=os.getenv('DASHSCOPE_API_KEY'),
+    # 此处以qwen-plus-2025-04-28为例，可按需更换为支持联网搜索的模型
+    model="qwen-plus-2025-04-28",  
+    messages=messages,
+    # 开启深度思考的参数，对 qwen3-30b-a3b-thinking-2507 、qwen3-235b-a22b-thinking-2507、QwQ 、DeepSeek-R1 模型无效
+    enable_thinking = True,
+    enable_search = True, # 开启联网搜索的参数
+    search_options = {
+        "forced_search": True, # 强制开启联网搜索
+        "enable_source": True, # 使返回结果包含搜索来源的信息，OpenAI 兼容方式暂不支持返回
+        "enable_citation": True, # 开启角标标注功能
+        "citation_format": "[ref_<number>]", # 角标形式为[ref_i]
+        "search_strategy": "pro" # 模型将搜索10条互联网信息
+    },
+    stream=True,
+    incremental_output=True,
+    result_format="message",
+)
+
+# 定义完整思考过程
+reasoning_content = ""
+# 定义完整回复
+answer_content = ""
+# 判断是否结束思考过程并开始回复
+is_answering = False
+# 判断是否为第一个chunk，便于打印搜索信息
+is_first_chunk = True
+
+print("=" * 20 + "搜索信息" + "=" * 20)
+
+for chunk in response:
+    if is_first_chunk:
+        search_results = chunk.output.search_info["search_results"]
+        for web in search_results:
+            print(f"[{web['index']}]: [{web['title']}]({web['url']})")
+        print("=" * 20 + "思考过程" + "=" * 20)
+        reasoning_content += chunk.output.choices[0].message.reasoning_content
+        print(chunk.output.choices[0].message.reasoning_content,end="",flush=True)
+        is_first_chunk = False
+    else:
+        # 如果思考过程与回复皆为空，则忽略
+        if (chunk.output.choices[0].message.content == "" and 
+            chunk.output.choices[0].message.reasoning_content == ""):
+            pass
+        else:
+            # 如果当前为思考过程
+            if (chunk.output.choices[0].message.reasoning_content != "" and 
+                chunk.output.choices[0].message.content == ""):
+                print(chunk.output.choices[0].message.reasoning_content, end="",flush=True)
+                reasoning_content += chunk.output.choices[0].message.reasoning_content
+            # 如果当前为回复
+            elif chunk.output.choices[0].message.content != "":
+                if not is_answering:
+                    print("\n" + "=" * 20 + "完整回复" + "=" * 20)
+                    is_answering = True
+                print(chunk.output.choices[0].message.content, end="",flush=True)
+                answer_content += chunk.output.choices[0].message.content
+
+# 如果您需要打印完整思考过程与完整回复，请将以下代码解除注释后运行
+# print("=" * 20 + "完整思考过程" + "=" * 20 + "\n")
+# print(f"{reasoning_content}")
+# print("=" * 20 + "完整回复" + "=" * 20 + "\n")
+# print(f"{answer_content}")
+# 如果您需要打印本次请求的 Token 消耗，请将以下代码解除注释后运行
+# print("\n"+"="*20+"Token 消耗"+"="*20)
+# print(chunk.usage)
+返回结果
+ 
+====================搜索信息====================
+[1]: [《哪吒2》票房破119亿元 2025累计票房破200亿!](https://www.1905.com/news/20250217/1714723.shtml)
+[2]: [《哪吒2》票房将达215亿,超《阿凡达》成全球第一,5大理由支撑](https://www.360kuai.com/pc/9630dbf8c5a1770de?cota=3&kuai_so=1&sign=360_e39369d1)
+[3]: [《哪吒2》票房破135亿:2025年中国电影市场的梦幻开局](https://www.sohu.com/a/862924685_122077416?scm=10001.325_13-109000.0.0.5_32)
+[4]: [哪吒2票房突破120亿元](https://baijiahao.baidu.com/s?id=1824275513693903228)
+[5]: [哪吒2票房突破153亿](https://m.gmw.cn/2025-03/23/content_1303998589.htm)
+[6]: [哪吒2总票房破131亿](https://m.gmw.cn/2025-02/22/content_1303977481.htm)
+[7]: [2025年娱乐新趋势哪吒2票房破150亿!国产动画如何征服全球市场?](https://m.sohu.com/a/874897462_122173903/?scm=10001.334_13-101000-0_922.0-0.0.a2_5X162X1746)
+[8]: [哪吒2全球票房破156亿](https://m.gmw.cn/2025-04/09/content_1304011206.htm)
+[9]: [《哪吒2》票房彻底疯了 ](https://m.china-xian.com/question/202503/5sy28p2jld.htm)
+====================思考过程====================
+好的，我现在需要回答用户关于《哪吒2》票房的问题。首先，我要查看提供的知识库内容，找到相关的票房数据。
+
+看到有多个引用提到《哪吒2》的票房情况。比如，ref_1提到票房破119亿元，但后面还有其他ref提到更高的数字。ref_3说票房破135亿，ref_5提到全球票房突破153亿，ref_8则提到全球票房破156亿。另外，ref_7提到票房破150亿，而ref_5和ref_8的数据似乎更具体，分别达到153亿和156亿。还有ref_1提到累计票房即将冲击120亿元，但后续的ref_3、ref_5、ref_8都有更高的数据。
+
+需要确认这些数据的时间点。例如，ref_1的日期是2025年第6周，也就是2月10日到16日，此时票房是119亿。而ref_3提到的是截至2025年2月24日，票房破135亿。之后ref_5在某个时间点提到153亿，ref_8提到156亿。可能这些数据是逐步更新的，所以最新的应该是ref_8的156亿。不过需要检查是否有更近的引用。
+
+另外，ref_7提到的是150亿，而ref_5和ref_8的数据更高。可能不同的ref有不同的统计时间和范围，比如是否包含海外票房。例如，ref_5提到全球票房（含预售及海外）突破153亿，而ref_8也是全球票房破156亿。因此，应该综合这些信息，指出不同时间点的票房成绩，并说明最新数据是156亿。
+
+还需要注意是否有矛盾的地方。例如，ref_1提到累计票房突破200亿，但其他ref的数字没有达到这个数值，可能ref_1中的2025全年电影票房累计突破200亿是指整个市场的总票房，而不是《哪吒2》单独的票房。需要仔细区分。
+
+总结一下，用户的问题是关于《哪吒2》的票房，需要列出不同时间点的票房数据，并指出最高纪录。同时要引用对应的ref编号，确保准确性。
+====================完整回复====================
+根据现有资料，《哪吒之魔童闹海》（《哪吒2》）的票房表现如下：
+
+1. **国内票房**：截至2025年2月24日，该片国内票房已突破135亿元[ref_3]，随后持续增长，累计票房接近150亿元[ref_7]。
+
+2. **全球票房**：  
+   - 截至2025年4月，影片全球票房（含预售及海外）已突破**156亿元**[ref_8]。  
+   - 此前，全球票房曾突破**153亿元**[ref_5]，并位居全球影史票房榜前五[ref_8]。
+
+3. **市场地位**：  
+   - 《哪吒2》成为首部进入全球票房前十的非好莱坞动画电影，且在欧洲37国同步上映，创下华语影片发行新纪录[ref_7]。  
+   - 影片还以150亿元票房成绩超越《阿凡达》（2009年第一部），一度登上全球票房榜首[ref_2]。
+
+4. **其他数据**：  
+   - 2025年第6周（2月10日-16日），周票房达38.4亿元，累计票房接近120亿元[ref_1]。  
+   - 影片在海外市场表现亮眼，例如在英国超级点映票房达100万美元，创造国际动画电影点映新纪录[ref_1]。
+
+综上，《哪吒2》的票房成绩体现了其在国内及全球市场的巨大影响力，最终全球票房有望进一步攀升。
+Function Calling（工具调用）
+虽然深度思考模型拥有强大的推理能力，但无法与外部世界进行交互。Function Calling 通过引入外部工具，可以帮助深度思考模型实现天气查询、数据库查询、发送邮件等功能。
+
+Qwen3（思考模式）、QwQ、DeepSeek-R1 模型会在思考完成后进行工具调用信息的输出，tool_choice参数只支持设置为"auto"（默认值，表示由模型自主选择工具）或"none"（强制模型不选择工具）。
+不支持 GLM-4.5 与 DeepSeek-R1 的蒸馏模型。
+OpenAI兼容DashScope
+PythonNode.jsHTTP
+示例代码
+ 
+import os
+from openai import OpenAI
+
+# 初始化OpenAI客户端，配置阿里云DashScope服务
+client = OpenAI(
+    # 若没有配置环境变量，请用阿里云百炼API Key将下行替换为：api_key="sk-xxx",
+    api_key=os.getenv("DASHSCOPE_API_KEY"),  # 从环境变量读取API密钥
+    base_url="https://dashscope.aliyuncs.com/compatible-mode/v1",
+)
+
+# 定义可用工具列表
+tools = [
+    # 工具1 获取当前时刻的时间
+    {
+        "type": "function",
+        "function": {
+            "name": "get_current_time",
+            "description": "当你想知道现在的时间时非常有用。",
+            "parameters": {}  # 无需参数
+        }
+    },  
+    # 工具2 获取指定城市的天气
+    {
+        "type": "function",
+        "function": {
+            "name": "get_current_weather",
+            "description": "当你想查询指定城市的天气时非常有用。",
+            "parameters": {  
+                "type": "object",
+                "properties": {
+                    "location": {
+                        "type": "string",
+                        "description": "城市或县区，比如北京市、杭州市、余杭区等。"
+                    }
+                },
+                "required": ["location"]  # 必填参数
+            }
+        }
+    }
+]
+
+messages = [{"role": "user", "content": input("请输入问题：")}]
+completion = client.chat.completions.create(
+    # 此处以qwen-plus-2025-04-28为例，可更换为其它深度思考模型
+    model="qwen-plus-2025-04-28",
+    messages=messages,
+    extra_body={
+        # 开启深度思考，该参数对qwen3-30b-a3b-thinking-2507、qwen3-235b-a22b-thinking-2507、QwQ 、DeepSeek-R1模型无效
+        "enable_thinking": True
+    },
+    tools=tools,
+    parallel_tool_calls=True,
+    stream=True,
+    # 解除注释后，可以获取到token消耗信息
+    # stream_options={
+    #     "include_usage": True
+    # }
+)
+
+reasoning_content = ""  # 定义完整思考过程
+answer_content = ""     # 定义完整回复
+tool_info = []          # 存储工具调用信息
+is_answering = False   # 判断是否结束思考过程并开始回复
+print("="*20+"思考过程"+"="*20)
+for chunk in completion:
+    if not chunk.choices:
+        # 处理用量统计信息
+        print("\n"+"="*20+"Usage"+"="*20)
+        print(chunk.usage)
+    else:
+        delta = chunk.choices[0].delta
+        # 处理AI的思考过程（链式推理）
+        if hasattr(delta, 'reasoning_content') and delta.reasoning_content is not None:
+            reasoning_content += delta.reasoning_content
+            print(delta.reasoning_content,end="",flush=True)  # 实时输出思考过程
+            
+        # 处理最终回复内容
+        else:
+            if not is_answering:  # 首次进入回复阶段时打印标题
+                is_answering = True
+                print("\n"+"="*20+"回复内容"+"="*20)
+            if delta.content is not None:
+                answer_content += delta.content
+                print(delta.content,end="",flush=True)  # 流式输出回复内容
+            
+            # 处理工具调用信息（支持并行工具调用）
+            if delta.tool_calls is not None:
+                for tool_call in delta.tool_calls:
+                    index = tool_call.index  # 工具调用索引，用于并行调用
+                    
+                    # 动态扩展工具信息存储列表
+                    while len(tool_info) <= index:
+                        tool_info.append({})
+                    
+                    # 收集工具调用ID（用于后续函数调用）
+                    if tool_call.id:
+                        tool_info[index]['id'] = tool_info[index].get('id', '') + tool_call.id
+                    
+                    # 收集函数名称（用于后续路由到具体函数）
+                    if tool_call.function and tool_call.function.name:
+                        tool_info[index]['name'] = tool_info[index].get('name', '') + tool_call.function.name
+                    
+                    # 收集函数参数（JSON字符串格式，需要后续解析）
+                    if tool_call.function and tool_call.function.arguments:
+                        tool_info[index]['arguments'] = tool_info[index].get('arguments', '') + tool_call.function.arguments
+            
+print(f"\n"+"="*19+"工具调用信息"+"="*19)
+if not tool_info:
+    print("没有工具调用")
+else:
+    print(tool_info)
+返回结果
+输入“四个直辖市的天气”，得到以下返回结果：
+
+ 
+====================思考过程====================
+好的，用户问的是“四个直辖市的天气”。首先，我需要明确四个直辖市是哪几个。根据中国的行政区划，直辖市包括北京、上海、天津和重庆。所以用户想知道这四个城市的天气情况。
+
+接下来，我需要检查可用的工具。提供的工具中有get_current_weather函数，参数是location，类型字符串。每个城市需要单独查询，因为函数一次只能查一个地点。因此，我需要为每个直辖市调用一次这个函数。
+
+然后，我需要考虑如何生成正确的工具调用。每个调用应该包含城市名称作为参数。比如，第一个调用是北京，第二个是上海，依此类推。确保参数名称是location，值是正确的城市名。
+
+另外，用户可能希望得到每个城市的天气信息，所以需要确保每个函数调用都正确无误。可能需要连续调用四次，每次对应一个城市。不过，根据工具的使用规则，可能需要分多次处理，或者一次生成多个调用。但根据示例，可能每次只调用一个函数，所以可能需要逐步进行。
+
+最后，确认是否有其他需要考虑的因素，比如参数是否正确，城市名称是否准确，以及是否需要处理可能的错误情况，比如城市不存在或API不可用。但目前看来，四个直辖市都是明确的，应该没问题。
+====================回复内容====================
+
+===================工具调用信息===================
+[{'id': 'call_767af2834c12488a8fe6e3', 'name': 'get_current_weather', 'arguments': '{"location": "北京市"}'}, {'id': 'call_2cb05a349c89437a947ada', 'name': 'get_current_weather', 'arguments': '{"location": "上海市"}'}, {'id': 'call_988dd180b2ca4b0a864ea7', 'name': 'get_current_weather', 'arguments': '{"location": "天津市"}'}, {'id': 'call_4e98c57ea96a40dba26d12', 'name': 'get_current_weather', 'arguments': '{"location": "重庆市"}'}]
+在得到 Function Calling 输出的工具信息后，您可以参考运行工具函数与大模型总结工具函数输出，使大模型能够根据工具运行的结果进行回答。
+
+开启/关闭思考模式
+除了通过enable_thinking参数设置，2025 年 4月发布的 Qwen3 模型还提供了通过提示词动态控制思考模式的便捷方法。当enable_thinking为true时，您可以在提示词中加上/no_think，使 Qwen3 模型在之后的回复关闭思考模式。若您需要在多轮对话重新开启思考模式，只需在最新输入的提示词加上/think 。
+
+在多轮对话中，模型会遵循最近的/think 或/no_think指令。
+如果模型没有输出思考过程，输出 Token 将按非思考模式的价格计费。
+OpenAI兼容DashScope
+PythonNode.jsHTTP
+示例代码
+ 
+from openai import OpenAI
+import os
+
+# 初始化OpenAI客户端
+client = OpenAI(
+    # 如果没有配置环境变量，请用阿里云百炼API Key替换：api_key="sk-xxx"
+    api_key=os.getenv("DASHSCOPE_API_KEY"),
+    base_url="https://dashscope.aliyuncs.com/compatible-mode/v1",
+)
+
+# 在 prompt 加上/no_think，即使enable_thinking设为true也会关闭思考模式。
+messages = [{"role": "user", "content": "你是谁/no_think"}]
+completion = client.chat.completions.create(
+    model="qwen-plus-2025-04-28",  # 您可以按需更换为其它Qwen3 模型
+    messages=messages,
+    # enable_thinking 参数开启思考过程，qwen3-30b-a3b-thinking-2507、qwen3-235b-a22b-thinking-2507、QwQ 与 DeepSeek-R1 模型总会进行思考，不支持该参数
+    extra_body={"enable_thinking": True},
+    stream=True,
+    # stream_options={
+    #     "include_usage": True
+    # },
+)
+
+reasoning_content = ""  # 完整思考过程
+answer_content = ""  # 完整回复
+is_answering = False  # 是否进入回复阶段
+print("\n" + "=" * 20 + "思考过程" + "=" * 20 + "\n")
+
+for chunk in completion:
+    if not chunk.choices:
+        print("\nUsage:")
+        print(chunk.usage)
+        continue
+
+    delta = chunk.choices[0].delta
+
+    # 只收集思考内容
+    if hasattr(delta, "reasoning_content") and delta.reasoning_content is not None:
+        if not is_answering:
+            print(delta.reasoning_content, end="", flush=True)
+        reasoning_content += delta.reasoning_content
+
+    # 收到content，开始进行回复
+    if hasattr(delta, "content") and delta.content:
+        if not is_answering:
+            print("\n" + "=" * 20 + "完整回复" + "=" * 20 + "\n")
+            is_answering = True
+        print(delta.content, end="", flush=True)
+        answer_content += delta.content
+返回结果
+ 
+====================思考过程====================
+
+
+====================完整回复====================
+
+我是通义千问，阿里巴巴集团旗下的通义实验室自主研发的超大规模语言模型。我可以帮助你回答问题、创作文字、进行逻辑推理、编程等任务。如果你有任何问题或需要帮助，欢迎随时向我提问！
+非流式输出
+非流式输出
+
+注意事项
+为了达到模型的最佳推理效果，不建议设置 System Message。建议您通过 User Message 传入模型的设定、输出格式、要求等信息。
+
+该注意事项不适用于 deepseek-r1-0528 模型。
+如果在Chatbox、Dify等工具或平台中调用模型，您可能需要输入三个信息：
+
+本文获取的API Key
+
+Base URL：https://dashscope.aliyuncs.com/compatible-mode/v1
+
+模型名称，如qwen-plus
+
+我们也提供了一些常用工具的配置方法：Dify、Chatbox、Cline、Claude Code、Postman。
+
+方式二：通过代码调用模型
+
+如果通过代码调用模型，建议您配置API Key到环境变量，以便在调用模型或应用时使用。这样可以避免在代码中显式地配置API Key，从而降低API Key泄漏的风险。
+
+请勿以任何方式公开API Key，避免因未经授权的使用导致安全风险或资金损失。
+
+API Key时效性说明
+通过API-Key页面创建的API Key默认为永久有效，手动删除后API Key将会失效。
+
+如果您需要为第三方应用或用户提供临时访问权限，或者希望严格控制敏感数据访问、删除等高风险操作时，可以获取临时鉴权Token（有效期为60秒），避免直接暴露长期有效的API Key，降低泄露风险。
+
+apikey:
+sk-2d5c7dbf8a624240a39f59e3e5d382cf
+
+
+腾讯元宝：
+
+混元 OpenAI 兼容接口相关调用示例
+最近更新时间：2025-07-22 10:20:01
+
+我的收藏
+本页目录：
+对话(chat completions)
+多轮对话(chat completions)
+图生文(如 hunyuan-vision)
+Function Calling
+OpenAI 兼容参数
+混元自定义参数
+与OpenAI的差异
+/v1/chat/completions
+/v1/embeddings
+Embedding
+混元 API 兼容了 OpenAI 的接口规范，这意味着您可以直接使用 OpenAI 官方提供的 SDK 来调用混元大模型。您仅需要将 base_url 和 api_key 替换成混元的相关配置，不需要对应用做额外修改，即可无缝将您的应用切换到混元大模型。
+base_url：https://api.hunyuan.cloud.tencent.com/v1
+api_key：需在控制台 API KEY页面 进行创建，操作步骤请参考 API KEY 管理。
+接口请求地址完整路径：https://api.hunyuan.cloud.tencent.com/v1/chat/completions
+第三方软件集成混元，您可参见 第三方软件集成混元指南 。
+对话(chat completions)
+cURL
+Python
+NodeJS
+Golang
+curl https://api.hunyuan.cloud.tencent.com/v1/chat/completions \
+-H "Content-Type: application/json" \
+-H "Authorization: Bearer $HUNYUAN_API_KEY" \
+-d '{
+  "model": "hunyuan-turbos-latest",
+  "messages": [
+        {
+            "role": "user",
+            "content": "Say this is a test."
+        }
+    ],
+  "enable_enhancement": true
+}'
+﻿
+多轮对话(chat completions)
+多轮对话是指携带上下文的对话，用户请求时需将之前所有对话历史（即多条 user 和 assistant ）拼接好,  传递给混元/chat/completions接口，即可实现多轮对话。
+cURL
+Python
+NodeJS
+Golang
+curl --location 'https://api.hunyuan.cloud.tencent.com/v1/chat/completions' \
+-H "Content-Type: application/json" \
+-H "Authorization: Bearer $HUNYUAN_API_KEY" \
+--data '{
+  "model": "hunyuan-turbos-latest",
+  "messages": [
+        {
+            "role": "user",
+            "content": "What'\''s the highest mountain in the world? Keep it short."
+        },
+        {
+            "role": "assistant",
+            "content": "Mount Everest."
+        },
+        {
+            "role": "user",
+            "content": "What is the second?"
+        }
+    ],
+  "enable_enhancement": true
+}'
+﻿
+图生文(如 hunyuan-vision)
+图生文(Image-to-Text)，是一种输入图片和文本，输出文本的大模型能力。混元的 vision 系列模型均可参考此文档，相关模型可参见 产品概述 。
+ImageUrl.Url 支持图片链接和图片 base64 两种方式。其中图片 base64 的格式为："data:image/jpeg;base64,xxxxxxx"（注意：data:image/jpeg;base64之后的逗号需使用英文逗号）
+下面是 jpeg 图片转 base64的各语言代码示例 （其他图片格式注意修改为对应的 MIME 类型，例如： image/png，image/webp，image/bmp 等）：
+Python
+NodeJS
+Golang
+import base64
+﻿
+with open("1.jpeg", 'rb') as image_file:
+    encoded_image = base64.b64encode(image_file.read())
+    print("data:image/jpeg;base64,"+encoded_image.decode('utf-8'))
+cURL
+Python
+NodeJS
+Golang
+curl --location 'https://api.hunyuan.cloud.tencent.com/v1/chat/completions' \
+-H "Content-Type: application/json" \
+-H "Authorization: Bearer $HUNYUAN_API_KEY" \
+--data '{
+  "model": "hunyuan-vision",
+  "messages": [
+        {
+            "role": "user",
+            "content": [
+                {
+                    "type": "text",
+                    "text": "What'\''s in this image?"
+                },
+                {
+                    "type": "image_url",
+                    "image_url": {
+                        "url": "https://qcloudimg.tencent-cloud.cn/raw/42c198dbc0b57ae490e57f89aa01ec23.png"
+                    }
+                }
+            ]
+        }
+    ]
+}'
+﻿
+Function Calling
+function call 是指模型在回答用户问题时，调用外部函数或API来获得信息或与外部系统交互的能力。
+function call 使用流程（以获取某地温度举例）：
+定义函数 get_weather。
+第一次请求对话接口：传递用户问题和函数定义（方法名称、描述、参数列表），由模型选择合适的函数并填充函数的参数。
+第一次接收模型的响应：在客户侧调用函数获得结果（函数需要由客户的代码来调用，模型只会给出要调用的函数和参数而不会执行调用）。
+第二次请求对话接口：在第一次的请求基础上，附加上第一次的响应和函数调用的结果，放到多轮上下文中，再次请求模型。
+第二次接收模型的响应：模型生成最终结果。
+﻿
+第一次请求示例：
+cURL
+Python
+NodeJS
+Golang
+curl --location 'https://api.hunyuan.cloud.tencent.com/v1/chat/completions' \
+-H "Content-Type: application/json" \
+-H "Authorization: Bearer $HUNYUAN_API_KEY" \
+--data '{
+  "model": "hunyuan-turbos-latest",
+  "messages": [
+        {
+            "role": "user",
+            "content": "What'\''s the weather like in Paris today?"
+        }
+    ],
+    "tools": [
+        {
+            "type": "function",
+            "function": {
+                "name": "get_weather",
+                "description": "Get current temperature for provided coordinates in celsius.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "latitude": {
+                            "type": "number"
+                        },
+                        "longitude": {
+                            "type": "number"
+                        }
+﻿
+                    },
+                    "required": [
+                        "latitude","longitude"
+                    ]
+                }
+            }
+        }
+    ]
+}'
+第一次响应示例：
+JSON
+{
+  "id": "cabe32d2b30dd30ac3d7aad02f235dd4",
+  "choices": [
+    {
+      "finish_reason": "tool_calls",
+      "index": 0,
+      "message": {
+        "content": "调用天气查询工具（get_weather）来获取巴黎的天气信息。\n\t\n\t用户想要知道今天巴黎的天气。我需要调用天气查询工具（get_weather）来获取巴黎的天气信息。",
+        "role": "assistant",
+        "tool_calls": [
+          {
+            "id": "call_cvdrgkk2c3mceb26d7sg",
+            "function": {
+              "arguments": "{\"latitude\":48.8566,\"longitude\":2.3522}",
+              "name": "get_weather"
+            },
+            "type": "function",
+            "index": 0
+          }
+        ]
+      }
+    }
+  ],
+  "created": 1742452818,
+  "model": "hunyuan-turbos-latest",
+  "object": "chat.completion",
+  "system_fingerprint": "",
+  "usage": {
+    "completion_tokens": 48,
+    "prompt_tokens": 22,
+    "total_tokens": 70
+  }
+}
+第二次请求示例：
+cURL
+Python
+NodeJS
+Golang
+curl --location 'https://api.hunyuan.cloud.tencent.com/v1/chat/completions' \
+-H "Content-Type: application/json" \
+-H "Authorization: Bearer $HUNYUAN_API_KEY" \
+--data '{
+  "model": "hunyuan-turbos-latest",
+  "messages": [
+        {
+            "role": "user",
+            "content": "What'\''s the weather like in Paris today?"
+        },
+        {
+            "role": "assistant",
+            "content": "调用天气查询工具（get_weather）来获取巴黎的天气信息。\n\t\n\t用户想要知道今天巴黎的天气。我需要调用天气查询工具（get_weather）来获取巴黎的天气信息。",
+            "tool_calls": [
+                {
+                    "id": "call_cvdu67s2c3mafqgr1g6g",
+                    "function": {
+                    "arguments": "{\"latitude\":48.8566,\"longitude\":2.3522}",
+                    "name": "get_weather"
+                    },
+                    "type": "function",
+                    "index": 0
+                }
+            ]
+        },
+        {
+            "role": "tool",
+            "tool_call_id": "call_cvdu67s2c3mafqgr1g6g",
+            "content": "11.7"
+        }
+    ],
+    "tools": [
+        {
+            "type": "function",
+            "function": {
+                "name": "get_weather",
+                "description": "Get current temperature for provided coordinates in celsius.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "latitude": {
+                            "type": "number"
+                        },
+                        "longitude": {
+                            "type": "number"
+                        }
+﻿
+                    },
+                    "required": [
+                        "latitude","longitude"
+                    ]
+                }
+            }
+        }
+    ]
+}'
+第二次响应示例：
+JSON
+{
+  "id": "b03283653e27bc78a9c095699cfbc123",
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "The current temperature in Paris is 7.6°C.",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1742453367,
+  "model": "hunyuan-turbos-latest",
+  "object": "chat.completion",
+  "system_fingerprint": "",
+  "usage": {
+    "completion_tokens": 24,
+    "prompt_tokens": 71,
+    "total_tokens": 95
+  },
+  "note": "以上内容为AI生成，不代表开发者立场，请勿删除或修改本标记"
+}
+之后可以继续进行对话。
+OpenAI 兼容参数
+参数名称
+必选
+类型
+默认值
+描述
+model
+是
+string
+无
+模型名称，可选值参考 产品概述 中混元生文模型列表。
+示例值：hunyuan-turbos-latest
+messages
+是
+object[]
+无
+聊天上下文信息。相关字段可参考上文调用示例。
+说明：
+长度最多为 40，按对话时间从旧到新在数组中排列。
+message.role 可选值：system、user、assistant、 tool（ function call 场景）。
+messages 中 content 总长度不能超过模型输入长度上限（可参考 产品概述 文档），超过则会截断最前面的内容，只保留尾部内容。
+stream
+否
+boolean
+false
+流式调用开关。
+说明：
+未传值时默认为非流式调用（false）。
+流式调用时以 SSE 协议增量返回结果（返回值取 choices[n].delta 中的值，需要拼接增量数据才能获得完整结果）。
+非流式调用时：
+ 调用方式与普通 HTTP 请求无异。
+接口响应耗时较长，如需更低时延建议设置为 true。
+只返回一次最终结果（返回值取 choices[n].message 中的值）。
+             示例值：false
+max_tokens
+否
+integer
+4096
+限制一次请求中模型生成 completion 的最大 token 数。输入 token 和输出 token 的总长度受模型的上下文长度的限制。
+seed
+否
+integer
+无
+说明： 
+1. 确保模型的输出是可复现的。
+2. 取值区间为非0正整数，最大值10000。 
+3. 非必要不建议使用，不合理的取值会影响效果。
+示例值：1
+stop
+否
+string[]
+无
+自定义结束生成字符串。
+调用 OpenAI 接口时，如果您指定了 stop 参数, 模型会停止在匹配到 stop 的内容之前。
+在调用混元接口时，会停止在匹配到 stop 的内容之后。
+说明：未来我们可能会修改此行为以便和 OpenAI 保持一致。但是目前有使用该参数的情况下，开发者需要注意该参数是否会对应用造成影响，以及未来该行为调整时带来的影响。
+temperature
+否
+number
+无
+说明：
+影响模型输出多样性，模型已有默认参数，不传值时使用各模型推荐值，不推荐用户修改。
+取值区间为 [0.0, 2.0]。较高的数值会使输出更加多样化和不可预测，而较低的数值会使其更加集中和确定。
+top_p
+否
+number
+0
+说明：
+影响输出文本的多样性。模型已有默认参数，不传值时使用各模型推荐值，不推荐用户修改。
+取值区间为 [0.0, 1.0]。取值越大，生成文本的多样性越强。
+tools
+否
+object[]
+无
+可调用的工具列表，相关字段可参考上文调用示例。
+tool_choice
+否
+object
+无
+工具使用选项，可选值包括 none、auto、custom。
+说明：
+仅对 hunyuan-turbos、hunyuan-functioncall 模型生效。
+none：不调用工具。
+     auto：模型自行选择生成回复或调用工具。
+     custom：强制模型调用指定的工具。
+未设置时，默认值为 auto。
+     示例值：auto
+stream_options
+否
+object
+无
+流式输出相关选项。只有在 stream 参数为 true 时，才可设置此参数。
+﻿
+混元自定义参数
+参数名称
+必选
+类型
+默认值
+描述
+citation
+否
+boolean
+false
+搜索引文角标开关。
+说明：
+配合 enable_enhancement 和 search_info 参数使用。打开后，回答中命中搜索的结果会在片段后增加角标标志，对应 search_info 列表中的链接。
+false：开关关闭；true：开关打开。
+未传值时默认开关关闭（false）。
+enable_enhancement
+否
+boolean
+false
+功能增强（如搜索）开关。
+说明：
+hunyuan-lite 无功能增强（如搜索）能力，该参数对 hunyuan-lite 版本不生效。
+未传值时默认关闭开关。
+关闭时将直接由主模型生成回复内容，可以降低响应时延（对于流式输出时的首字时延尤为明显）。但在少数场景里，回复效果可能会下降。
+安全审核能力不属于功能增强范围，不受此字段影响。
+2025年04月20日 00:00:00起，由默认开启状态转为默认关闭状态。
+enable_multimedia
+否
+boolean
+false
+多媒体开关。
+详细介绍请阅读 多媒体介绍 中的说明。
+说明：
+该参数目前仅对白名单内用户生效，如您想体验该功能请 联系我们。
+该参数仅在功能增强（如搜索）开关开启（enable_enhancement=true）并且极速版搜索开关关闭（enable_speed_search=false）时生效。
+hunyuan-lite 无多媒体能力，该参数对 hunyuan-lite 版本不生效。
+未传值时默认关闭。
+开启并搜索到对应的多媒体信息时，会输出对应的多媒体地址，可以定制个性化的图文消息。
+enable_recommended_questions
+否
+boolean
+false
+推荐问答开关。
+说明：
+未传值时默认关闭。
+开启后，在返回值的最后一个包中会增加 recommended_questions 字段表示推荐问答， 最多返回3条。
+force_search_enhancement
+否
+boolean
+false
+强制搜索增强开关。
+说明：
+未传值时默认关闭。
+开启后，将强制走AI搜索，当 AI 搜索结果为空时，由大模型回复兜底话术。
+search_info
+否
+boolean
+false
+在值为 true 且命中搜索时，接口会返回 search_info。
+enable_deep_search
+否
+boolean
+false
+是否开启深度研究该问题，默认是 false，在值为 true 且命中深度研究该问题时，会返回深度研究该问题信息。
+enable_deep_read
+否
+boolean
+false
+文档深度阅读开关。
+说明：
+未传值时默认关闭。
+开启后，需要根据文件的具体类型，指定不同的 prompt 模板。例如：核心速览、论文评价、主要内容、关键问题及回答等。
+当前仅支持单轮，单文档的深度阅读。
+﻿
+与OpenAI的差异
+/v1/chat/completions
+stop
+调用 OpenAI 的接口时，如果您指定了 stop 参数, 模型会停止在匹配到 stop 的内容之前。
+在调用混元接口时，会停止在匹配到 stop 的内容之后。
+以原始输出 “我是一个AI助手可以帮助您在不同方面做出更好的决策，解答您的疑问并提供可靠的信息。”为例：
+类型
+stop 参数
+模型输出
+OpenAI
+助手
+我是一个 AI
+混元
+助手
+我是一个 AI 助手
+说明：
+未来我们可能会修改此行为以便和 OpenAI 保持一致。
+但是目前有使用该参数的情况下，开发者需要注意该参数是否会对应用造成影响，以及未来该行为调整时带来的影响。
+stream_options
+当流式返回且 stream_options.include_usage=true 时，会在最后一个数据块中返回 usage 信息。
+/v1/embeddings
+embedding 接口目前仅支持 input 和 model 参数，model 当前固定为 hunyuan-embedding，dimensions 固定为 1024。
+说明：
+我们将努力保证混元与 OpenAI 的兼容性，但是仍然会存在一些细微的差异（通常来说并不会破坏整体的兼容性或者影响功能的使用）。
+本文档会列出混元兼容接口与 OpenAI 的差异，开发者可以自行检查并评估对您应用的影响。
+Embedding
+cURL
+curl --location 'https://api.hunyuan.cloud.tencent.com/v1/embeddings' \
+-H 'Content-Type: application/json' \
+-H 'Authorization: Bearer $HUNYUAN_API_KEY' \
+--data '{
+  "model": "hunyuan-embedding",
+  "input": "你好"
+}'
+输出示例：
+{
+    "object": "list",
+    "data": [
+        {
+            "index": 0,
+            "embedding": [
+                -0.0009261319064535201,
+                -0.01005222275853157,
+                ......
+            ],
+            "object": "embedding"
+        }
+    ],
+    "model": "hunyuan-embedding",
+    "usage": {
+        "prompt_tokens": 3,
+        "total_tokens": 3
+    }
+}
+
+sk-rEyLszJIeokPDbL0bAsWwjg6Nk675czJ2CnThN69JZyjCFWF
