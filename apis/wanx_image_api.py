@@ -67,7 +67,8 @@ class WanxImageAPI:
         
         headers = {
             "Authorization": f"Bearer {api_key}",
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
+            "X-DashScope-Async": "enable"  # 强制使用异步模式
         }
         
         data = {
