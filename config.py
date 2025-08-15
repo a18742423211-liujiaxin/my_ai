@@ -1,9 +1,10 @@
 # API配置文件
+import os
 
 # 通义千问API配置
 QWEN_CONFIG = {
     "api_base": "https://dashscope.aliyuncs.com/compatible-mode/v1",
-    "api_key": "sk-2d5c7dbf8a624240a39f59e3e5d382cf",
+    "api_key": os.getenv('DASHSCOPE_API_KEY', 'sk-2d5c7dbf8a624240a39f59e3e5d382cf'),
     "model": "qwen-plus-2025-04-28",  # 支持深度思考的模型
     "timeout": 30,
     "max_tokens": 2000,
@@ -14,7 +15,7 @@ QWEN_CONFIG = {
 # 通义万相文生图API配置
 WANX_CONFIG = {
     "api_base": "https://dashscope.aliyuncs.com/api/v1/services/aigc/text2image/image-synthesis",
-    "api_key": "sk-2d5c7dbf8a624240a39f59e3e5d382cf",
+    "api_key": os.getenv('DASHSCOPE_API_KEY', 'sk-2d5c7dbf8a624240a39f59e3e5d382cf'),
     "model": "wanx-v1",
     "timeout": 60,
     "poll_timeout": 10,
@@ -28,7 +29,7 @@ WANX_CONFIG = {
 # 腾讯混元API配置
 HUNYUAN_CONFIG = {
     "api_base": "https://api.hunyuan.cloud.tencent.com/v1",
-    "api_key": "sk-rEyLszJIeokPDbL0bAsWwjg6Nk675czJ2CnThN69JZyjCFWF",
+    "api_key": os.getenv('HUNYUAN_API_KEY', 'sk-rEyLszJIeokPDbL0bAsWwjg6Nk675czJ2CnThN69JZyjCFWF'),
     "model": "hunyuan-turbos-latest",
     "timeout": 30,
     "max_tokens": 2000,
@@ -39,8 +40,8 @@ HUNYUAN_CONFIG = {
 # Flask应用配置
 APP_CONFIG = {
     'host': '0.0.0.0',
-    'port': 5000,
-    'debug': True
+    'port': int(os.getenv('PORT', 5000)),
+    'debug': os.getenv('FLASK_ENV') != 'production'
 }
 
 # 模型信息配置
