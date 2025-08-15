@@ -268,6 +268,17 @@
         .generate-video-btn:hover { transform: translateY(-2px); box-shadow: 0 14px 28px rgba(225,29,72,0.35), 0 0 18px rgba(220,38,38,0.35); }
         .generate-video-btn:disabled { background: linear-gradient(90deg, #475569, #334155); cursor: not-allowed; box-shadow: none; transform: none; }
 
+        /* 任务ID样式 */
+        code {
+            background: rgba(34, 211, 238, 0.15);
+            color: var(--primary);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
+            font-size: 0.85em;
+            border: 1px solid rgba(34, 211, 238, 0.3);
+        }
+
         .chat-container { flex: 1; display: flex; flex-direction: column; padding: 20px; min-height: 0; }
 
         .messages {
@@ -1178,6 +1189,8 @@
             
             try {
                 // 第一步：创建任务
+                loadingDiv.innerHTML = `<div class="message bot"><div class="message-content">🎬 正在创建视频生成任务...</div></div>`;
+                
                 const response = await fetch('/create-video', {
                     method: 'POST',
                     headers: {
@@ -1194,17 +1207,36 @@
                 });
                 
                 if (!response.ok) {
+                    loadingDiv.remove();
                     const data = await safeJson(response);
-                    throw new Error(getErrorMessage(data) || `HTTP ${response.status}`);
+                    const errorMsg = getErrorMessage(data) || `HTTP ${response.status}`;
+                    
+                    // 根据错误类型提供更友好的提示
+                    let userFriendlyMsg = errorMsg;
+                    if (errorMsg.includes('API KEY')) {
+                        userFriendlyMsg = '❌ API密钥未配置或无效，请联系管理员';
+                    } else if (errorMsg.includes('quota') || errorMsg.includes('limit')) {
+                        userFriendlyMsg = '❌ API调用次数已达上限，请稍后重试';
+                    } else if (errorMsg.includes('timeout')) {
+                        userFriendlyMsg = '❌ 请求超时，请检查网络连接后重试';
+                    } else if (response.status === 500) {
+                        userFriendlyMsg = '❌ 服务器内部错误，请稍后重试';
+                    }
+                    
+                    addMessage(userFriendlyMsg, 'bot');
+                    return;
                 }
                 
                 const taskData = await safeJson(response);
                 
                 if (!taskData.task_id) {
                     loadingDiv.remove();
-                    addMessage(`❌ 任务创建失败: ${getErrorMessage(taskData)}`, 'bot');
+                    const errorMsg = getErrorMessage(taskData) || '未知错误';
+                    addMessage(`❌ 任务创建失败: ${errorMsg}`, 'bot');
                     return;
                 }
+                
+                loadingDiv.innerHTML = `<div class="message bot"><div class="message-content">✅ 任务创建成功，正在生成视频... <br/>任务ID: <code>${taskData.task_id}</code></div></div>`;
                 
                 // 第二步：轮询任务状态
                 const taskId = taskData.task_id;
@@ -1242,7 +1274,11 @@
                             }
                             
                             // 更新加载状态
-                            loadingDiv.innerHTML = `<div class="message bot"><div class="message-content">⏳ 正在生成视频... (${pollCount}/${maxPollCount})</div></div>`;
+                            const progress = Math.round((pollCount / maxPollCount) * 100);
+                            const progressBar = '█'.repeat(Math.floor(progress / 5)) + '░'.repeat(20 - Math.floor(progress / 5));
+                            loadingDiv.innerHTML = `<div class="message bot"><div class="message-content">⏳ 正在生成视频... <br/>
+                                进度: ${progressBar} ${progress}% <br/>
+                                轮询: ${pollCount}/${maxPollCount} | 任务ID: <code>${taskId}</code></div></div>`;
                             
                             // 5秒后继续轮询
                             setTimeout(pollTask, 5000);

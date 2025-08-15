@@ -257,6 +257,12 @@ def create_video():
     """创建视频生成任务"""
     try:
         data = request.get_json()
+        if not data:
+            return jsonify({
+                'error': '请求数据为空',
+                'status': 'error'
+            }), 400
+            
         prompt = data.get('prompt', '').strip()
         image_url = data.get('image_url', '').strip()
         quality = data.get('quality', 'speed')
@@ -265,13 +271,30 @@ def create_video():
         fps = data.get('fps', 30)
         with_audio = data.get('with_audio', False)
         
+        print(f"🎬 接收到视频生成请求:")
+        print(f"   - 提示词: {prompt}")
+        print(f"   - 图片URL: {image_url}")
+        print(f"   - 质量: {quality}")
+        print(f"   - 尺寸: {size}")
+        print(f"   - 时长: {duration}秒")
+        print(f"   - 帧率: {fps}")
+        print(f"   - 音频: {with_audio}")
+        
         if not prompt and not image_url:
             return jsonify({
                 'error': '请提供视频描述文本或基础图片',
                 'status': 'error'
             }), 400
         
+        if prompt and len(prompt) > 1500:
+            return jsonify({
+                'error': f'视频描述过长（{len(prompt)}字符），最多支持1500字符',
+                'status': 'error'
+            }), 400
+        
         cogvideo_api = api_clients['cogvideo']
+        print(f"📡 调用 CogVideo API...")
+        
         result = cogvideo_api.create_video_task(
             prompt=prompt,
             image_url=image_url,
@@ -282,7 +305,10 @@ def create_video():
             with_audio=with_audio
         )
         
+        print(f"🔄 API 调用结果: {result}")
+        
         if result['success']:
+            print(f"✅ 任务创建成功: {result['task_id']}")
             return jsonify({
                 'task_id': result['task_id'],
                 'status': result.get('status', 'processing'),
@@ -296,14 +322,20 @@ def create_video():
                 'message': '视频生成任务创建成功，请使用task_id查询结果'
             })
         else:
+            error_msg = result.get('error', '视频生成任务创建失败')
+            print(f"❌ 任务创建失败: {error_msg}")
             return jsonify({
-                'error': result.get('error', '视频生成任务创建失败'),
+                'error': error_msg,
                 'status': 'error'
             }), 500
             
     except Exception as e:
+        error_msg = f'处理视频生成请求时发生异常: {str(e)}'
+        print(f"❌ 异常: {error_msg}")
+        import traceback
+        traceback.print_exc()
         return jsonify({
-            'error': f'处理视频生成请求时发生异常: {str(e)}',
+            'error': error_msg,
             'status': 'error'
         }), 500
 
@@ -311,14 +343,26 @@ def create_video():
 def get_video_task_status(task_id):
     """查询视频生成任务状态"""
     try:
+        if not task_id or not task_id.strip():
+            return jsonify({
+                'error': '任务ID不能为空',
+                'status': 'error'
+            }), 400
+        
+        print(f"📊 查询视频任务状态: {task_id}")
         cogvideo_api = api_clients['cogvideo']
         result = cogvideo_api.query_task_status(task_id)
         
+        print(f"📋 任务状态查询结果: {result}")
         return jsonify(result)
         
     except Exception as e:
+        error_msg = f'查询视频任务状态时发生异常: {str(e)}'
+        print(f"❌ 状态查询异常: {error_msg}")
+        import traceback
+        traceback.print_exc()
         return jsonify({
-            'error': f'查询视频任务状态时发生异常: {str(e)}',
+            'error': error_msg,
             'status': 'error'
         }), 500
 
