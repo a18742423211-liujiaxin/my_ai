@@ -23,22 +23,22 @@ api_clients = {
 @app.route('/')
 def index():
     """主页 - 大驴AI智能创作平台"""
-    return render_template('index.html')
+    return render_template('home.html')
 
 @app.route('/chat')  
 def chat_page():
-    """AI对话页面 - 单页应用路由"""
-    return render_template('index.html')
+    """AI对话页面"""
+    return render_template('chat.html')
 
 @app.route('/image')
 def image_page():
-    """文生图页面 - 单页应用路由"""
-    return render_template('index.html')
+    """文生图页面"""
+    return render_template('image.html')
 
 @app.route('/video')
 def video_page():
-    """视频生成页面 - 单页应用路由"""
-    return render_template('index.html')
+    """视频生成页面"""
+    return render_template('video.html')
 
 @app.route('/models', methods=['GET'])
 def get_models():

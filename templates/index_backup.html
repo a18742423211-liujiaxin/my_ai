@@ -104,9 +104,11 @@
             text-decoration: none;
             padding: 0.5rem 1rem;
             border-radius: 8px;
-            transition: all 0.3s ease;
+            transition: color 0.3s ease, background 0.3s ease, border 0.3s ease, box-shadow 0.3s ease;
             position: relative;
             overflow: hidden;
+            display: inline-block;
+            border: 1px solid transparent; /* 添加透明边框避免layout shift */
         }
 
         .nav-link:hover {
@@ -114,6 +116,7 @@
             background: var(--glass-bg);
             border: 1px solid var(--border-glow);
             box-shadow: 0 0 20px var(--border-glow);
+            transform: none; /* 移除可能的transform效果 */
         }
 
         .nav-link::before {

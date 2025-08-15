@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block title %}文生图 - 大驴AI{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">AI文生图</h1>
+    <p>用文字描述您的想象，AI将为您创造精美的图像作品</p>
+</div>
+
+<div class="form-container">
+    <div class="form-group">
+        <label class="form-label">图像描述</label>
+        <textarea class="form-control" id="imagePrompt" placeholder="请描述您想要生成的图像..." rows="4"></textarea>
+    </div>
+    
+    <div class="form-group">
+        <label class="form-label">图像尺寸</label>
+        <select class="form-control" id="imageSize">
+            <option value="1024*1024">正方形 (1024×1024)</option>
+            <option value="1344*768">横向 (1344×768)</option>
+            <option value="768*1344">纵向 (768×1344)</option>
+        </select>
+    </div>
+    
+    <button class="btn" onclick="generateImage()">
+        <i class="fas fa-magic"></i> 生成图像
+    </button>
+    
+    <div class="loading" id="imageLoading">
+        <div class="spinner"></div>
+        <p>AI正在创作图像中，请耐心等待...</p>
+    </div>
+    
+    <div class="result-container hidden" id="imageResult">
+        <h3>生成结果：</h3>
+        <img id="generatedImage" class="result-image" alt="生成的图像">
+    </div>
+</div>
+{% endblock %} 

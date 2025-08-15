@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block title %}AI对话 - 大驴AI{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">AI对话</h1>
+    <p>与AI进行智能对话，体验深度思考模式带来的全新体验</p>
+</div>
+
+<div class="form-container">
+    <div class="form-group">
+        <label class="form-label">选择AI模型</label>
+        <select class="form-control" id="chatModel">
+            <option value="qwen_normal">通义千问(普通模式)</option>
+            <option value="qwen_thinking">通义千问(深度思考)</option>
+            <option value="hunyuan">腾讯混元</option>
+        </select>
+    </div>
+    
+    <div class="form-group">
+        <label class="form-label">您的问题</label>
+        <textarea class="form-control" id="chatInput" placeholder="请输入您的问题..." rows="4"></textarea>
+    </div>
+    
+    <button class="btn" onclick="sendChat()">
+        <i class="fas fa-paper-plane"></i> 发送消息
+    </button>
+    
+    <div class="loading" id="chatLoading">
+        <div class="spinner"></div>
+        <p>AI正在思考中，请稍候...</p>
+    </div>
+    
+    <div class="result-container hidden" id="chatResult">
+        <h3>AI回复：</h3>
+        <div id="chatResponse"></div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/chat.js') }}"></script>
+{% endblock %} 

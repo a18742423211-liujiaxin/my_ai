@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block title %}视频生成 - 大驴AI{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">AI视频生成</h1>
+    <p>用文字描述您的视频创意，AI将为您制作精彩视频</p>
+</div>
+
+<div class="form-container">
+    <div class="form-group">
+        <label class="form-label">视频描述</label>
+        <textarea class="form-control" id="videoPrompt" placeholder="请描述您想要生成的视频内容..." rows="4"></textarea>
+    </div>
+    
+    <div class="form-group">
+        <label class="form-label">视频质量</label>
+        <select class="form-control" id="videoQuality">
+            <option value="speed">快速生成</option>
+            <option value="quality">高质量</option>
+        </select>
+    </div>
+    
+    <div class="form-group">
+        <label class="form-label">视频尺寸</label>
+        <select class="form-control" id="videoSize">
+            <option value="1920x1080">全高清 (1920×1080)</option>
+            <option value="1280x720">高清 (1280×720)</option>
+            <option value="720x480">标清 (720×480)</option>
+        </select>
+    </div>
+    
+    <div class="form-group">
+        <label class="form-label">视频时长</label>
+        <select class="form-control" id="videoDuration">
+            <option value="5">5秒</option>
+            <option value="10">10秒</option>
+        </select>
+    </div>
+    
+    <button class="btn" onclick="generateVideo()">
+        <i class="fas fa-video"></i> 生成视频
+    </button>
+    
+    <div class="loading" id="videoLoading">
+        <div class="spinner"></div>
+        <p>AI正在制作视频中，请耐心等待...</p>
+    </div>
+    
+    <div class="result-container hidden" id="videoResult">
+        <h3>生成结果：</h3>
+        <video id="generatedVideo" class="result-video" controls>
+            您的浏览器不支持视频播放。
+        </video>
+    </div>
+</div>
+{% endblock %} 
