@@ -41,6 +41,19 @@ HUNYUAN_CONFIG = {
     "enable_enhancement": True
 }
 
+# CogVideoX 视频生成API配置
+COGVIDEO_CONFIG = {
+    "api_base": "https://api.minimax.chat/v1/paas/v4/videos/generations",
+    "api_key": os.getenv('COGVIDEO_API_KEY', ''),
+    "model": "cogvideox-3",
+    "timeout": 30,
+    "default_quality": "speed",
+    "default_size": "1920x1080",
+    "default_fps": 30,
+    "default_duration": 5,
+    "max_prompt_length": 1500
+}
+
 # Flask应用配置
 APP_CONFIG = {
     'host': '0.0.0.0',
@@ -64,5 +77,10 @@ MODELS_INFO = {
         'name': '通义万相',
         'model': WANX_CONFIG['model'],
         'api_base': WANX_CONFIG['api_base']
+    },
+    'cogvideo': {
+        'name': 'CogVideoX 视频生成',
+        'model': COGVIDEO_CONFIG['model'],
+        'api_base': COGVIDEO_CONFIG['api_base']
     }
 } 

@@ -234,6 +234,51 @@
         .generate-image-btn:hover { transform: translateY(-2px); box-shadow: 0 14px 28px rgba(124,58,237,0.35), 0 0 18px rgba(34,211,238,0.35); }
         .generate-image-btn:disabled { background: linear-gradient(90deg, #475569, #334155); cursor: not-allowed; box-shadow: none; transform: none; }
 
+        .text-to-video-section {
+            background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03));
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.08);
+            padding: 14px;
+            margin-bottom: 20px;
+        }
+
+        .text-to-video-section h3 { margin-bottom: 10px; color: var(--text); font-size: 15px; }
+
+        .video-input-group { display: flex; flex-direction: column; gap: 10px; }
+
+        .video-prompt-input {
+            width: 100%;
+            padding: 12px 14px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            font-size: 14px;
+            resize: vertical;
+            min-height: 90px;
+            color: var(--text);
+            background: rgba(2,6,23,0.5);
+            transition: border-color 0.25s, box-shadow 0.25s, transform 0.2s;
+        }
+
+        .video-prompt-input:focus {
+            outline: none;
+            border-color: rgba(124,58,237,0.6);
+            box-shadow: 0 0 0 3px rgba(124,58,237,0.18), inset 0 0 24px rgba(34,211,238,0.12);
+        }
+
+        .video-options { display: flex; flex-direction: column; gap: 10px; }
+        .video-options select {
+            flex: 1; padding: 10px; border: 1px solid var(--border); border-radius: 10px; font-size: 12px; color: var(--text); background: rgba(2,6,23,0.5);
+        }
+
+        .generate-video-btn {
+            background: linear-gradient(90deg, #e11d48, #dc2626);
+            color: white; border: 0; padding: 12px 20px; border-radius: 12px; cursor: pointer; font-size: 14px; font-weight: 700; transition: transform 0.25s, box-shadow 0.25s, filter 0.25s;
+            box-shadow: 0 10px 24px rgba(225,29,72,0.25), 0 0 0 1px rgba(255,255,255,0.06) inset;
+        }
+        .generate-video-btn:hover { transform: translateY(-2px); box-shadow: 0 14px 28px rgba(225,29,72,0.35), 0 0 18px rgba(220,38,38,0.35); }
+        .generate-video-btn:disabled { background: linear-gradient(90deg, #475569, #334155); cursor: not-allowed; box-shadow: none; transform: none; }
+
         .chat-container { flex: 1; display: flex; flex-direction: column; padding: 20px; min-height: 0; }
 
         .messages {
@@ -292,6 +337,15 @@
         .generated-image { width: 100%; max-width: 420px; border-radius: 12px; margin-bottom: 10px; box-shadow: 0 8px 20px rgba(0,0,0,0.35); }
         .image-prompt { font-size: 13px; color: var(--text-dim); background: rgba(2,6,23,0.45); padding: 8px 12px; border-radius: 8px; margin-top: 10px; border: 1px solid var(--border-soft); }
 
+        .video-message {
+            background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.04));
+            padding: 15px; border-radius: 20px 20px 20px 5px; border: 1px solid var(--border);
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255,255,255,0.06);
+            max-width: 80%;
+        }
+        .generated-video { width: 100%; max-width: 420px; border-radius: 12px; margin-bottom: 10px; box-shadow: 0 8px 20px rgba(0,0,0,0.35); }
+        .video-prompt { font-size: 13px; color: var(--text-dim); background: rgba(2,6,23,0.45); padding: 8px 12px; border-radius: 8px; margin-top: 10px; border: 1px solid var(--border-soft); }
+
         .input-area { display: flex; gap: 15px; align-items: flex-end; padding: 15px; background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03)); border-top: 1px solid var(--border-soft); flex-shrink: 0; }
         .input-group { flex: 1; display: flex; flex-direction: column; gap: 10px; }
         .input-controls { display: flex; align-items: center; gap: 15px; flex-wrap: wrap; }
@@ -328,11 +382,11 @@
         .error-message { background: rgba(239,68,68,0.12); color: #fecaca; padding: 15px; border-radius: 8px; border-left: 4px solid #ef4444; margin: 10px 0; }
 
         /* Sidebar 功能区视觉优化 */
-        .features-section, .text-to-image-section {
+        .features-section, .text-to-image-section, .text-to-video-section {
             position: relative;
             overflow: hidden;
         }
-        .features-section::before, .text-to-image-section::before {
+        .features-section::before, .text-to-image-section::before, .text-to-video-section::before {
             content: "";
             position: absolute;
             left: 12px;
@@ -343,7 +397,7 @@
             background: linear-gradient(90deg, var(--secondary), var(--primary));
             opacity: 0.6;
         }
-        .features-section h3, .text-to-image-section h3 {
+        .features-section h3, .text-to-image-section h3, .text-to-video-section h3 {
             font-weight: 800;
             letter-spacing: 0.3px;
             background: linear-gradient(90deg, var(--primary), var(--secondary));
@@ -357,6 +411,7 @@
         }
         .features-section h3::before { content: "🛠️"; }
         .text-to-image-section h3::before { content: "🎨"; }
+        .text-to-video-section h3::before { content: "🎬"; }
 
         /* 侧边栏清除按钮弱化，避免过于抢眼 */
         .features-section .clear-btn {
@@ -431,6 +486,34 @@
                     </button>
                 </div>
             </div>
+
+            <div class="text-to-video-section">
+                <h3>视频生成功能</h3>
+                <div class="video-input-group">
+                    <textarea 
+                        id="videoPrompt" 
+                        class="video-prompt-input" 
+                        placeholder="请描述您想要生成的视频内容..."
+                        maxlength="1500"
+                    ></textarea>
+                    <div class="video-options">
+                        <select id="videoQuality" title="选择生成质量">
+                            <option value="speed">速度优先</option>
+                            <option value="quality">质量优先</option>
+                        </select>
+                        <select id="videoSize" title="选择视频尺寸">
+                            <option value="1920x1080">1920×1080 (全高清横屏)</option>
+                        </select>
+                        <select id="videoDuration" title="选择视频时长">
+                            <option value="5">5秒</option>
+                            <option value="10">10秒</option>
+                        </select>
+                    </div>
+                    <button class="generate-video-btn" onclick="generateVideo()">
+                        🎬 生成视频
+                    </button>
+                </div>
+            </div>
         </div>
 
         <div class="main-content">
@@ -446,6 +529,7 @@
                             <span>✨ 支持通义千问、腾讯混元多模型切换</span>
                             <span>🧠 腾讯混元支持深度思考模式</span>
                             <span>🎨 支持通义万相文生图</span>
+                            <span>🎬 支持CogVideoX视频生成</span>
                         </div>
                     </div>
                 </div>
@@ -480,6 +564,7 @@
         document.addEventListener('DOMContentLoaded', function() {
             loadModels();
             loadImageStyles();
+            loadVideoOptions();
         });
 
         // 通用错误消息处理函数
@@ -1057,6 +1142,135 @@
             generateBtn.textContent = '🎨 生成图片';
         }
 
+        // 生成视频
+        async function generateVideo() {
+            const promptInput = document.getElementById('videoPrompt');
+            const prompt = promptInput.value.trim();
+            const quality = document.getElementById('videoQuality').value;
+            const size = document.getElementById('videoSize').value;
+            const duration = parseInt(document.getElementById('videoDuration').value);
+            const generateBtn = document.querySelector('.generate-video-btn');
+            
+            if (!prompt) {
+                alert('请输入视频描述');
+                return;
+            }
+            
+            if (generateBtn.disabled) return;
+            
+            generateBtn.disabled = true;
+            generateBtn.textContent = '🎬 生成中...';
+            
+            // 添加视频生成请求消息
+            addMessage(`🎬 正在生成视频: ${prompt}`, 'user');
+            
+            // 显示加载状态
+            const loadingDiv = addMessage('正在生成视频，请稍候...', 'bot', true);
+            
+            try {
+                // 第一步：创建任务
+                const response = await fetch('/create-video', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        prompt: prompt,
+                        quality: quality,
+                        size: size,
+                        duration: duration,
+                        fps: 30,
+                        with_audio: false
+                    })
+                });
+                
+                if (!response.ok) {
+                    const data = await safeJson(response);
+                    throw new Error(getErrorMessage(data) || `HTTP ${response.status}`);
+                }
+                
+                const taskData = await safeJson(response);
+                
+                if (!taskData.task_id) {
+                    loadingDiv.remove();
+                    addMessage(`❌ 任务创建失败: ${getErrorMessage(taskData)}`, 'bot');
+                    return;
+                }
+                
+                // 第二步：轮询任务状态
+                const taskId = taskData.task_id;
+                let pollCount = 0;
+                const maxPollCount = 60; // 最多轮询60次 (60 * 5秒 = 5分钟)
+                
+                const pollTask = async () => {
+                    try {
+                        const statusResponse = await fetch(`/video-task-status/${taskId}`);
+                        
+                        if (!statusResponse.ok) {
+                            throw new Error(`HTTP ${statusResponse.status}`);
+                        }
+                        
+                        const statusData = await safeJson(statusResponse);
+                        
+                        if (statusData.status === 'completed' && statusData.success) {
+                            // 任务完成
+                            loadingDiv.remove();
+                            addVideoMessage(statusData.video_url, prompt);
+                            promptInput.value = '';
+                            return;
+                        } else if (statusData.status === 'failed' || statusData.status === 'error') {
+                            // 任务失败
+                            loadingDiv.remove();
+                            addMessage(`❌ 视频生成失败: ${getErrorMessage(statusData)}`, 'bot');
+                            return;
+                        } else if (statusData.status === 'processing' || statusData.status === 'pending') {
+                            // 任务进行中，继续轮询
+                            pollCount++;
+                            if (pollCount >= maxPollCount) {
+                                loadingDiv.remove();
+                                addMessage('❌ 视频生成超时，请稍后重试', 'bot');
+                                return;
+                            }
+                            
+                            // 更新加载状态
+                            loadingDiv.innerHTML = `<div class="message bot"><div class="message-content">⏳ 正在生成视频... (${pollCount}/${maxPollCount})</div></div>`;
+                            
+                            // 5秒后继续轮询
+                            setTimeout(pollTask, 5000);
+                        } else {
+                            // 未知状态
+                            loadingDiv.remove();
+                            addMessage(`❌ 未知任务状态: ${statusData.status}`, 'bot');
+                            return;
+                        }
+                        
+                    } catch (error) {
+                        pollCount++;
+                        if (pollCount >= maxPollCount) {
+                            loadingDiv.remove();
+                            addMessage('❌ 视频生成超时，请稍后重试', 'bot');
+                            return;
+                        }
+                        
+                        // 网络错误时继续重试
+                        console.log(`轮询错误 (${pollCount}/${maxPollCount}):`, error);
+                        setTimeout(pollTask, 5000);
+                    }
+                };
+                
+                // 开始轮询
+                setTimeout(pollTask, 5000); // 5秒后开始第一次轮询
+                
+            } catch (error) {
+                loadingDiv.remove();
+                const msg = error.message || '网络连接异常';
+                addMessage(`❌ 网络错误: ${msg}`,'bot');
+            }
+            
+            generateBtn.disabled = false;
+            generateBtn.textContent = '🎬 生成视频';
+        }
+
         // 添加消息到聊天界面
         function addMessage(content, type, isLoading = false, modelInfo = '') {
             const messagesDiv = document.getElementById('messages');
@@ -1098,6 +1312,81 @@
             messagesDiv.scrollTop = messagesDiv.scrollHeight;
         }
 
+        // 添加视频消息
+        function addVideoMessage(videoUrl, prompt) {
+            const messagesDiv = document.getElementById('messages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message video-message';
+            
+            messageDiv.innerHTML = `
+                <video controls class="generated-video" onclick="window.open('${videoUrl}', '_blank')">
+                    <source src="${videoUrl}" type="video/mp4">
+                    您的浏览器不支持视频播放。
+                </video>
+                <div class="video-prompt">提示词: ${prompt}</div>
+                <div class="message-info">
+                    <span class="model-badge">CogVideoX</span>
+                </div>
+            `;
+            
+            messagesDiv.appendChild(messageDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        // 加载视频选项
+        async function loadVideoOptions() {
+            try {
+                const response = await fetch('/video-options');
+                if (response.ok) {
+                    const data = await response.json();
+                    
+                    // 更新视频尺寸选项
+                    const sizeSelect = document.getElementById('videoSize');
+                    sizeSelect.innerHTML = '';
+                    data.sizes.forEach(size => {
+                        const option = document.createElement('option');
+                        option.value = size.value;
+                        option.textContent = size.label;
+                        if (size.value === data.default_size) {
+                            option.selected = true;
+                        }
+                        sizeSelect.appendChild(option);
+                    });
+                    
+                    // 更新质量选项
+                    const qualitySelect = document.getElementById('videoQuality');
+                    qualitySelect.innerHTML = '';
+                    data.qualities.forEach(quality => {
+                        const option = document.createElement('option');
+                        option.value = quality.value;
+                        option.textContent = quality.label;
+                        if (quality.value === data.default_quality) {
+                            option.selected = true;
+                        }
+                        qualitySelect.appendChild(option);
+                    });
+                    
+                    // 更新时长选项
+                    const durationSelect = document.getElementById('videoDuration');
+                    durationSelect.innerHTML = '';
+                    data.durations.forEach(duration => {
+                        const option = document.createElement('option');
+                        option.value = duration;
+                        option.textContent = `${duration}秒`;
+                        if (duration === data.default_duration) {
+                            option.selected = true;
+                        }
+                        durationSelect.appendChild(option);
+                    });
+                    
+                } else {
+                    console.log('使用默认视频选项');
+                }
+            } catch (error) {
+                console.error('加载视频选项失败:', error);
+            }
+        }
+
         // 清除对话
         function clearChat() {
             if (confirm('确定要清除所有对话吗？')) {
@@ -1110,6 +1399,7 @@
                             <span>✨ 支持通义千问、腾讯混元多模型切换</span>
                             <span>🧠 腾讯混元支持深度思考模式</span>
                             <span>🎨 支持通义万相文生图</span>
+                            <span>🎬 支持CogVideoX视频生成</span>
                         </div>
                     </div>
                 `;

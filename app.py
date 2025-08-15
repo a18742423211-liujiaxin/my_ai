@@ -6,6 +6,7 @@ from apis.qwen_normal_api import QwenNormalAPI
 from apis.qwen_thinking_api import QwenThinkingAPI
 from apis.hunyuan_new_api import HunyuanAPI
 from apis.wanx_image_api import WanxImageAPI
+from apis.cogvideo_api import CogVideoAPI
 
 app = Flask(__name__)
 CORS(app)  # 启用CORS支持
@@ -15,7 +16,8 @@ api_clients = {
     'qwen_normal': QwenNormalAPI(),
     'qwen_thinking': QwenThinkingAPI(),
     'hunyuan': HunyuanAPI(),
-    'wanx': WanxImageAPI()
+    'wanx': WanxImageAPI(),
+    'cogvideo': CogVideoAPI()
 }
 
 @app.route('/')
@@ -248,6 +250,104 @@ def get_image_styles():
             'sizes': ['1024*1024'],
             'default_style': '<auto>',
             'default_size': '1024*1024'
+        })
+
+@app.route('/create-video', methods=['POST'])
+def create_video():
+    """创建视频生成任务"""
+    try:
+        data = request.get_json()
+        prompt = data.get('prompt', '').strip()
+        image_url = data.get('image_url', '').strip()
+        quality = data.get('quality', 'speed')
+        size = data.get('size', '1920x1080')
+        duration = data.get('duration', 5)
+        fps = data.get('fps', 30)
+        with_audio = data.get('with_audio', False)
+        
+        if not prompt and not image_url:
+            return jsonify({
+                'error': '请提供视频描述文本或基础图片',
+                'status': 'error'
+            }), 400
+        
+        cogvideo_api = api_clients['cogvideo']
+        result = cogvideo_api.create_video_task(
+            prompt=prompt,
+            image_url=image_url,
+            quality=quality,
+            size=size,
+            fps=fps,
+            duration=duration,
+            with_audio=with_audio
+        )
+        
+        if result['success']:
+            return jsonify({
+                'task_id': result['task_id'],
+                'status': result.get('status', 'processing'),
+                'prompt': prompt,
+                'image_url': image_url,
+                'quality': quality,
+                'size': size,
+                'duration': duration,
+                'fps': fps,
+                'with_audio': with_audio,
+                'message': '视频生成任务创建成功，请使用task_id查询结果'
+            })
+        else:
+            return jsonify({
+                'error': result.get('error', '视频生成任务创建失败'),
+                'status': 'error'
+            }), 500
+            
+    except Exception as e:
+        return jsonify({
+            'error': f'处理视频生成请求时发生异常: {str(e)}',
+            'status': 'error'
+        }), 500
+
+@app.route('/video-task-status/<task_id>', methods=['GET'])
+def get_video_task_status(task_id):
+    """查询视频生成任务状态"""
+    try:
+        cogvideo_api = api_clients['cogvideo']
+        result = cogvideo_api.query_task_status(task_id)
+        
+        return jsonify(result)
+        
+    except Exception as e:
+        return jsonify({
+            'error': f'查询视频任务状态时发生异常: {str(e)}',
+            'status': 'error'
+        }), 500
+
+@app.route('/video-options', methods=['GET'])
+def get_video_options():
+    """获取视频生成选项"""
+    try:
+        from apis.cogvideo_api import get_available_video_sizes, get_available_qualities
+        return jsonify({
+            'sizes': get_available_video_sizes(),
+            'qualities': get_available_qualities(),
+            'fps_options': [30, 60],
+            'durations': [5, 10],
+            'default_quality': 'speed',
+            'default_size': '1920x1080',
+            'default_fps': 30,
+            'default_duration': 5
+        })
+    except Exception as e:
+        return jsonify({
+            'error': f'获取视频选项失败: {str(e)}',
+            'sizes': [{'value': '1920x1080', 'label': '1920×1080（全高清横屏）'}],
+            'qualities': [{'value': 'speed', 'label': '速度优先'}],
+            'fps_options': [30],
+            'durations': [5],
+            'default_quality': 'speed',
+            'default_size': '1920x1080',
+            'default_fps': 30,
+            'default_duration': 5
         })
 
 if __name__ == '__main__':
