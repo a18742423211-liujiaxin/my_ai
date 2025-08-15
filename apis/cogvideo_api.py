@@ -65,7 +65,7 @@ class CogVideoAPI:
         if not request_id:
             request_id = str(uuid.uuid4())
         
-        create_url = "https://api.minimax.chat/v1/paas/v4/videos/generations"
+        create_url = "https://api.minimax.chat/paas/v4/videos/generations"
         
         headers = {
             "Authorization": f"Bearer {api_key}",
@@ -175,7 +175,7 @@ class CogVideoAPI:
         api_key = self.config['api_key']
         
         # 使用查询异步结果的公共API
-        query_url = f"https://api.minimax.chat/v1/query/{task_id}"
+        query_url = f"https://api.minimax.chat/query/{task_id}"
         
         headers = {
             "Authorization": f"Bearer {api_key}"
