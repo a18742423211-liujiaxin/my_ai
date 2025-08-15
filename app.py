@@ -190,7 +190,7 @@ def chat_stream_internal(messages, model):
 
 @app.route('/text-to-image', methods=['POST'])
 def text_to_image():
-    """处理文生图请求"""
+    """处理文生图请求 - 创建任务并返回任务ID"""
     data = request.json
     prompt = data.get('prompt', '')
     style = data.get('style', '<auto>')
@@ -201,19 +201,21 @@ def text_to_image():
     
     try:
         wanx_api = api_clients['wanx']
-        result = wanx_api.generate_image(prompt, style, size)
+        # 只创建任务，不等待结果
+        result = wanx_api.create_image_task(prompt, style, size)
         
         if result['success']:
             return jsonify({
-                'image_url': result['image_url'],
-                'status': 'success',
+                'task_id': result['task_id'],
+                'status': 'pending',
                 'prompt': prompt,
                 'style': style,
-                'size': size
+                'size': size,
+                'message': '任务创建成功，请使用task_id查询结果'
             })
         else:
             return jsonify({
-                'error': result.get('error', '图片生成失败'),
+                'error': result.get('error', '任务创建失败'),
                 'status': 'error',
                 'details': result.get('details', '')
             }), 500
@@ -221,6 +223,21 @@ def text_to_image():
     except Exception as e:
         return jsonify({
             'error': f'处理文生图请求时发生异常: {str(e)}',
+            'status': 'error'
+        }), 500
+
+@app.route('/task-status/<task_id>', methods=['GET'])
+def get_task_status(task_id):
+    """查询任务状态"""
+    try:
+        wanx_api = api_clients['wanx']
+        result = wanx_api.query_task_status(task_id)
+        
+        return jsonify(result)
+        
+    except Exception as e:
+        return jsonify({
+            'error': f'查询任务状态时发生异常: {str(e)}',
             'status': 'error'
         }), 500
 

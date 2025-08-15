@@ -7,9 +7,9 @@ class WanxImageAPI:
     """万象文生图API类 - 兼容原有接口"""
     
     def __init__(self):
+        """初始化万象API"""
+        from config import WANX_CONFIG
         self.config = WANX_CONFIG
-        self.api_key = self.config['api_key']
-        self.base_url = self.config['api_base']
     
     def get_model_info(self):
         """获取模型信息"""
@@ -50,13 +50,208 @@ class WanxImageAPI:
             if image_urls:
                 return {
                     "success": True,
-                    "image_url": image_urls[0],  # 第一张图片的URL
-                    "data": [{"url": url} for url in image_urls],
-                    "usage": result.get("usage", {}),
-                    "task_id": result.get("task_id", "")
+                    "image_url": image_urls[0],  # 返回第一张图片
+                    "image_urls": image_urls,    # 返回所有图片
+                    "task_id": result.get("task_id", ""),
+                    "usage": result.get("usage", {})
                 }
         
         return result
+    
+    def create_image_task(self, prompt, style="<auto>", size="1024*1024", n=1):
+        """
+        创建图片生成任务（不等待结果）
+        """
+        api_key = self.config['api_key']
+        create_url = "https://dashscope.aliyuncs.com/api/v1/services/aigc/text2image/image-synthesis"
+        
+        headers = {
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json"
+        }
+        
+        data = {
+            "model": "wanx-v1",
+            "input": {
+                "prompt": prompt
+            },
+            "parameters": {
+                "style": style,
+                "size": size,
+                "n": n
+            }
+        }
+        
+        try:
+            print(f"🎨 创建万象文生图任务...")
+            print(f"📝 提示词: {prompt}")
+            print(f"🎭 风格: {style}")
+            print(f"📐 尺寸: {size}")
+            
+            response = requests.post(create_url, headers=headers, json=data, timeout=30)
+            
+            if response.status_code != 200:
+                print(f"❌ 创建任务失败: HTTP {response.status_code}")
+                print(f"📄 响应内容: {response.text}")
+                return {
+                    "success": False,
+                    "error": f"创建任务失败: HTTP {response.status_code}, {response.text}"
+                }
+            
+            result = response.json()
+            print(f"✅ 任务创建成功: {json.dumps(result, ensure_ascii=False, indent=2)}")
+            
+            if "output" not in result or "task_id" not in result["output"]:
+                return {
+                    "success": False,
+                    "error": "创建任务响应格式错误，缺少task_id"
+                }
+            
+            task_id = result["output"]["task_id"]
+            print(f"📋 任务ID: {task_id}")
+            
+            return {
+                "success": True,
+                "task_id": task_id,
+                "status": result["output"].get("task_status", "PENDING")
+            }
+            
+        except requests.exceptions.Timeout:
+            return {
+                "success": False,
+                "error": "请求超时，请稍后重试"
+            }
+        except requests.exceptions.RequestException as e:
+            return {
+                "success": False,
+                "error": f"网络请求失败: {str(e)}"
+            }
+        except json.JSONDecodeError:
+            return {
+                "success": False,
+                "error": "API响应格式错误"
+            }
+        except Exception as e:
+            return {
+                "success": False,
+                "error": f"未知错误: {str(e)}"
+            }
+    
+    def query_task_status(self, task_id):
+        """
+        查询任务状态
+        """
+        api_key = self.config['api_key']
+        query_url = f"https://dashscope.aliyuncs.com/api/v1/tasks/{task_id}"
+        
+        headers = {
+            "Authorization": f"Bearer {api_key}"
+        }
+        
+        try:
+            response = requests.get(query_url, headers=headers, timeout=30)
+            
+            if response.status_code != 200:
+                print(f"❌ 查询任务失败: HTTP {response.status_code}")
+                return {
+                    "success": False,
+                    "error": f"查询任务失败: HTTP {response.status_code}",
+                    "status": "error"
+                }
+            
+            result = response.json()
+            task_status = result.get("output", {}).get("task_status", "UNKNOWN")
+            
+            print(f"📊 任务状态: {task_status}")
+            
+            if task_status == "SUCCEEDED":
+                # 任务成功完成
+                print("✅ 任务执行成功！")
+                
+                results = result.get("output", {}).get("results", [])
+                if not results:
+                    return {
+                        "success": False,
+                        "error": "任务成功但未返回图片",
+                        "status": "error"
+                    }
+                
+                # 提取图片URL
+                image_urls = []
+                for item in results:
+                    if "url" in item:
+                        image_urls.append(item["url"])
+                
+                if not image_urls:
+                    return {
+                        "success": False,
+                        "error": "任务成功但图片URL格式错误",
+                        "status": "error"
+                    }
+                
+                usage = result.get("usage", {})
+                print(f"📈 使用统计: {json.dumps(usage, ensure_ascii=False)}")
+                
+                return {
+                    "success": True,
+                    "status": "completed",
+                    "image_urls": image_urls,
+                    "image_url": image_urls[0] if image_urls else None,
+                    "task_id": task_id,
+                    "usage": usage
+                }
+            
+            elif task_status == "FAILED":
+                # 任务失败
+                print("❌ 任务执行失败")
+                error_msg = result.get("output", {}).get("message", "任务执行失败")
+                return {
+                    "success": False,
+                    "error": f"任务执行失败: {error_msg}",
+                    "status": "failed"
+                }
+            
+            elif task_status in ["PENDING", "RUNNING"]:
+                # 任务进行中
+                return {
+                    "success": True,
+                    "status": "running",
+                    "task_id": task_id,
+                    "message": "任务正在处理中，请稍后再查询"
+                }
+            
+            else:
+                # 未知状态
+                return {
+                    "success": False,
+                    "error": f"未知任务状态: {task_status}",
+                    "status": "unknown"
+                }
+                
+        except requests.exceptions.Timeout:
+            return {
+                "success": False,
+                "error": "查询请求超时",
+                "status": "error"
+            }
+        except requests.exceptions.RequestException as e:
+            return {
+                "success": False,
+                "error": f"网络请求失败: {str(e)}",
+                "status": "error"
+            }
+        except json.JSONDecodeError:
+            return {
+                "success": False,
+                "error": "API响应格式错误",
+                "status": "error"
+            }
+        except Exception as e:
+            return {
+                "success": False,
+                "error": f"未知错误: {str(e)}",
+                "status": "error"
+            }
     
     def chat(self, messages, **kwargs):
         """

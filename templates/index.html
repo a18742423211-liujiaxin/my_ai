@@ -878,6 +878,7 @@
             const loadingDiv = addMessage('正在生成图片，请稍候...', 'bot', true);
             
             try {
+                // 第一步：创建任务
                 const response = await fetch('/text-to-image', {
                     method: 'POST',
                     headers: {
@@ -895,19 +896,77 @@
                     throw new Error(getErrorMessage(data) || `HTTP ${response.status}`);
                 }
                 
-                const data = await safeJson(response);
+                const taskData = await safeJson(response);
                 
-                // 移除加载消息
-                loadingDiv.remove();
-                
-                if (data.status === 'success') {
-                    // 添加生成的图片
-                    addImageMessage(data.image_url, data.prompt);
-                    // 清空输入框
-                    promptInput.value = '';
-                } else {
-                    addMessage(`❌ 图片生成失败: ${getErrorMessage(data)}`, 'bot');
+                if (taskData.status !== 'pending') {
+                    loadingDiv.remove();
+                    addMessage(`❌ 任务创建失败: ${getErrorMessage(taskData)}`, 'bot');
+                    return;
                 }
+                
+                // 第二步：轮询任务状态
+                const taskId = taskData.task_id;
+                let pollCount = 0;
+                const maxPollCount = 40; // 最多轮询40次 (40 * 3秒 = 2分钟)
+                
+                const pollTask = async () => {
+                    try {
+                        const statusResponse = await fetch(`/task-status/${taskId}`);
+                        
+                        if (!statusResponse.ok) {
+                            throw new Error(`HTTP ${statusResponse.status}`);
+                        }
+                        
+                        const statusData = await safeJson(statusResponse);
+                        
+                        if (statusData.status === 'completed' && statusData.success) {
+                            // 任务完成
+                            loadingDiv.remove();
+                            addImageMessage(statusData.image_url, prompt);
+                            promptInput.value = '';
+                            return;
+                        } else if (statusData.status === 'failed' || (statusData.status === 'error' && !statusData.success)) {
+                            // 任务失败
+                            loadingDiv.remove();
+                            addMessage(`❌ 图片生成失败: ${getErrorMessage(statusData)}`, 'bot');
+                            return;
+                        } else if (statusData.status === 'running' || statusData.status === 'pending') {
+                            // 任务进行中，继续轮询
+                            pollCount++;
+                            if (pollCount >= maxPollCount) {
+                                loadingDiv.remove();
+                                addMessage('❌ 图片生成超时，请稍后重试', 'bot');
+                                return;
+                            }
+                            
+                            // 更新加载状态
+                            loadingDiv.innerHTML = `<div class="message bot"><div class="message-content">⏳ 正在生成图片... (${pollCount}/${maxPollCount})</div></div>`;
+                            
+                            // 3秒后继续轮询
+                            setTimeout(pollTask, 3000);
+                        } else {
+                            // 未知状态
+                            loadingDiv.remove();
+                            addMessage(`❌ 未知任务状态: ${statusData.status}`, 'bot');
+                            return;
+                        }
+                        
+                    } catch (error) {
+                        pollCount++;
+                        if (pollCount >= maxPollCount) {
+                            loadingDiv.remove();
+                            addMessage('❌ 图片生成超时，请稍后重试', 'bot');
+                            return;
+                        }
+                        
+                        // 网络错误时继续重试
+                        console.log(`轮询错误 (${pollCount}/${maxPollCount}):`, error);
+                        setTimeout(pollTask, 3000);
+                    }
+                };
+                
+                // 开始轮询
+                setTimeout(pollTask, 3000); // 3秒后开始第一次轮询
                 
             } catch (error) {
                 loadingDiv.remove();
