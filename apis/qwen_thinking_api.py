@@ -115,20 +115,28 @@ class QwenThinkingAPI:
                 
                 delta = chunk.choices[0].delta
                 
-                # 处理思考内容
+                # 处理思考内容 - 在回答开始前输出思考过程
                 if hasattr(delta, "reasoning_content") and delta.reasoning_content is not None:
                     reasoning_content += delta.reasoning_content
-                    yield {
-                        "choices": [{
-                            "delta": {
-                                "reasoning_content": delta.reasoning_content
-                            }
-                        }]
-                    }
+                    if not is_answering:  # 只在还没开始回答时显示思考过程
+                        yield {
+                            "choices": [{
+                                "delta": {
+                                    "reasoning_content": delta.reasoning_content
+                                }
+                            }]
+                        }
                 
-                # 一旦开始输出正式答案，就只输出答案内容
+                # 处理回答内容
                 if hasattr(delta, "content") and delta.content:
-                    is_answering = True
+                    if not is_answering:
+                        is_answering = True
+                        # 标记思考阶段结束，开始回答
+                        yield {
+                            "phase_change": "answer_start"
+                        }
+                    
+                    answer_content += delta.content
                     yield {
                         "choices": [{
                             "delta": {
@@ -137,13 +145,13 @@ class QwenThinkingAPI:
                         }]
                     }
             
-            # 结束时输出一个汇总，包含完整的思考内容和回答内容（如有需要）
-            if reasoning_content or answer_content:
-                yield {
-                    "summary": {
-                        "reasoning": reasoning_content if reasoning_content else None,
-                        "answer": answer_content if answer_content else None
-                    }
+            # 结束时输出一个汇总
+            yield {
+                "summary": {
+                    "reasoning": reasoning_content if reasoning_content else None,
+                    "answer": answer_content if answer_content else None
                 }
+            }
+            
         except Exception as e:
             yield {"error": f"流式响应处理失败: {str(e)}"} 

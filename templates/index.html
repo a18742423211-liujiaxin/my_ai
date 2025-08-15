@@ -19,6 +19,11 @@
             --text-dim: #94a3b8;
         }
 
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -669,13 +674,33 @@
                 // 为深度思考模式创建特殊的显示结构
                 if (model === 'qwen_thinking') {
                     contentDiv.innerHTML = `
-                        <div class="thinking-section" style="background: #f0f4f8; padding: 15px; border-radius: 10px; margin-bottom: 15px; border-left: 4px solid #9C27B0;">
-                            <div style="font-weight: bold; color: #9C27B0; margin-bottom: 8px;">🤔 思考过程：</div>
-                            <div class="thinking-content" style="font-family: monospace; font-size: 13px; color: #555; white-space: pre-wrap; line-height: 1.4;"></div>
+                        <div class="thinking-section" style="background: #f8f9ff; padding: 15px; border-radius: 10px; margin-bottom: 15px; border-left: 4px solid #9C27B0; border: 1px solid #e1e5f2;">
+                            <div style="font-weight: bold; color: #9C27B0; margin-bottom: 8px; display: flex; align-items: center;">
+                                <span style="margin-right: 8px;">🧠</span>
+                                <span>思考过程</span>
+                                <span class="thinking-indicator" style="margin-left: 10px; color: #666; font-size: 12px; animation: pulse 1.5s infinite;">正在思考...</span>
+                            </div>
+                            <div class="thinking-content" style="
+                                font-family: 'Consolas', 'Monaco', 'Courier New', monospace; 
+                                font-size: 13px; 
+                                color: #555; 
+                                white-space: pre-wrap; 
+                                line-height: 1.4; 
+                                max-height: 300px; 
+                                overflow-y: auto; 
+                                background: white; 
+                                padding: 10px; 
+                                border-radius: 6px;
+                                border: 1px solid #e0e0e0;
+                                min-height: 50px;
+                            "></div>
                         </div>
-                        <div class="response-section">
-                            <div style="font-weight: bold; color: #4CAF50; margin-bottom: 8px;">💡 回复内容：</div>
-                            <div class="response-content"></div>
+                        <div class="response-section" style="display: none;">
+                            <div style="font-weight: bold; color: #4CAF50; margin-bottom: 8px; display: flex; align-items: center;">
+                                <span style="margin-right: 8px;">💡</span>
+                                <span>回复内容</span>
+                            </div>
+                            <div class="response-content" style="line-height: 1.6;"></div>
                         </div>
                     `;
                 }
@@ -712,6 +737,8 @@
                                         const thinkingDiv = contentDiv.querySelector('.thinking-content');
                                         if (thinkingDiv) {
                                             thinkingDiv.textContent = thinkingContent;
+                                            // 自动滚动到底部
+                                            thinkingDiv.scrollTop = thinkingDiv.scrollHeight;
                                         }
                                     } else if (parsed.type === 'answer_start') {
                                         // 开始回答阶段
@@ -720,6 +747,16 @@
                                         // 处理回复内容
                                         responseContent += parsed.content;
                                         if (model === 'qwen_thinking') {
+                                            // 显示回答部分
+                                            const responseSection = contentDiv.querySelector('.response-section');
+                                            const thinkingIndicator = contentDiv.querySelector('.thinking-indicator');
+                                            if (responseSection && responseSection.style.display === 'none') {
+                                                responseSection.style.display = 'block';
+                                                // 隐藏思考指示器
+                                                if (thinkingIndicator) {
+                                                    thinkingIndicator.style.display = 'none';
+                                                }
+                                            }
                                             const responseDiv = contentDiv.querySelector('.response-content');
                                             if (responseDiv) {
                                                 responseDiv.textContent = responseContent;
@@ -737,6 +774,47 @@
                                     } else if (parsed.type === 'done') {
                                         // 处理完成信号
                                         console.log('响应完成');
+                                    }
+                                }
+                                // 处理原始API响应格式（包含delta结构）
+                                else if (parsed.choices && parsed.choices[0] && parsed.choices[0].delta) {
+                                    const delta = parsed.choices[0].delta;
+                                    
+                                    // 处理思考内容
+                                    if (delta.reasoning_content) {
+                                        thinkingContent += delta.reasoning_content;
+                                        if (model === 'qwen_thinking') {
+                                            const thinkingDiv = contentDiv.querySelector('.thinking-content');
+                                            if (thinkingDiv) {
+                                                thinkingDiv.textContent = thinkingContent;
+                                                // 自动滚动到底部
+                                                thinkingDiv.scrollTop = thinkingDiv.scrollHeight;
+                                            }
+                                        }
+                                    }
+                                    
+                                    // 处理回答内容
+                                    if (delta.content) {
+                                        responseContent += delta.content;
+                                        if (model === 'qwen_thinking') {
+                                            // 显示回答部分
+                                            const responseSection = contentDiv.querySelector('.response-section');
+                                            const thinkingIndicator = contentDiv.querySelector('.thinking-indicator');
+                                            if (responseSection && responseSection.style.display === 'none') {
+                                                responseSection.style.display = 'block';
+                                                // 隐藏思考指示器
+                                                if (thinkingIndicator) {
+                                                    thinkingIndicator.style.display = 'none';
+                                                }
+                                            }
+                                            const responseDiv = contentDiv.querySelector('.response-content');
+                                            if (responseDiv) {
+                                                responseDiv.textContent = responseContent;
+                                            }
+                                        } else {
+                                            fullResponse += delta.content;
+                                            contentDiv.textContent = fullResponse;
+                                        }
                                     }
                                 }
                                 // 处理旧格式响应（兼容性）

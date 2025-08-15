@@ -138,32 +138,25 @@ def chat_stream_internal(messages, model):
             
             # 处理不同的chunk格式
             if "choices" in chunk:
-                # 检查是否是思考阶段
-                if chunk.get("thinking_phase"):
-                    # 思考过程
-                    if "reasoning_content" in chunk["choices"][0]["delta"]:
-                        thinking_chunk = {
-                            "type": "thinking",
-                            "content": chunk["choices"][0]["delta"]["reasoning_content"],
-                            "model": model
-                        }
-                        yield f"data: {json.dumps(thinking_chunk, ensure_ascii=False)}\n\n"
-                elif chunk.get("answer_start"):
-                    # 开始回答阶段
-                    start_chunk = {
-                        "type": "answer_start",
+                delta = chunk["choices"][0].get("delta", {})
+                
+                # 检查是否有思考内容
+                if "reasoning_content" in delta:
+                    thinking_chunk = {
+                        "type": "thinking",
+                        "content": delta["reasoning_content"],
                         "model": model
                     }
-                    yield f"data: {json.dumps(start_chunk, ensure_ascii=False)}\n\n"
-                else:
-                    # 正常回答内容
-                    if "content" in chunk["choices"][0]["delta"]:
-                        content_chunk = {
-                            "type": "content",
-                            "content": chunk["choices"][0]["delta"]["content"],
-                            "model": model
-                        }
-                        yield f"data: {json.dumps(content_chunk, ensure_ascii=False)}\n\n"
+                    yield f"data: {json.dumps(thinking_chunk, ensure_ascii=False)}\n\n"
+                
+                # 检查是否有回答内容
+                if "content" in delta:
+                    content_chunk = {
+                        "type": "content",
+                        "content": delta["content"],
+                        "model": model
+                    }
+                    yield f"data: {json.dumps(content_chunk, ensure_ascii=False)}\n\n"
             elif "usage" in chunk:
                 # 使用情况统计
                 usage_chunk = {
