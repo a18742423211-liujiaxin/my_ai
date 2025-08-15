@@ -65,7 +65,7 @@ class CogVideoAPI:
         if not request_id:
             request_id = str(uuid.uuid4())
         
-        create_url = "https://api.minimaxi.chat/paas/v4/videos/generations"
+        create_url = "https://api.minimaxi.chat/v1/paas/v4/videos/generations"
         
         headers = {
             "Authorization": f"Bearer {api_key}",

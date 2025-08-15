@@ -43,7 +43,7 @@ HUNYUAN_CONFIG = {
 
 # CogVideoX 视频生成API配置
 COGVIDEO_CONFIG = {
-    "api_base": "https://api.minimax.chat/v1/paas/v4/videos/generations",
+    "api_base": "https://api.minimaxi.chat/v1/paas/v4/videos/generations",
     "api_key": os.getenv('COGVIDEO_API_KEY', ''),
     "model": "cogvideox-3",
     "timeout": 30,
