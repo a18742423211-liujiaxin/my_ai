@@ -142,20 +142,7 @@
             box-shadow: 0 0 0 3px rgba(34,211,238,0.18), inset 0 0 24px rgba(124,58,237,0.12);
         }
 
-        .features-section {
-            margin-bottom: 20px;
-            padding: 14px;
-            background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03));
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            box-shadow: inset 0 1px 0 rgba(255,255,255,0.08);
-        }
 
-        .features-section h3 {
-            margin-bottom: 10px;
-            color: var(--text);
-            font-size: 15px;
-        }
 
         .toggle-switch {
             display: flex;
@@ -382,11 +369,11 @@
         .error-message { background: rgba(239,68,68,0.12); color: #fecaca; padding: 15px; border-radius: 8px; border-left: 4px solid #ef4444; margin: 10px 0; }
 
         /* Sidebar 功能区视觉优化 */
-        .features-section, .text-to-image-section, .text-to-video-section {
+        .text-to-image-section, .text-to-video-section {
             position: relative;
             overflow: hidden;
         }
-        .features-section::before, .text-to-image-section::before, .text-to-video-section::before {
+        .text-to-image-section::before, .text-to-video-section::before {
             content: "";
             position: absolute;
             left: 12px;
@@ -397,7 +384,7 @@
             background: linear-gradient(90deg, var(--secondary), var(--primary));
             opacity: 0.6;
         }
-        .features-section h3, .text-to-image-section h3, .text-to-video-section h3 {
+        .text-to-image-section h3, .text-to-video-section h3 {
             font-weight: 800;
             letter-spacing: 0.3px;
             background: linear-gradient(90deg, var(--primary), var(--secondary));
@@ -409,23 +396,11 @@
             gap: 6px;
             margin-bottom: 12px;
         }
-        .features-section h3::before { content: "🛠️"; }
+
         .text-to-image-section h3::before { content: "🎨"; }
         .text-to-video-section h3::before { content: "🎬"; }
 
-        /* 侧边栏清除按钮弱化，避免过于抢眼 */
-        .features-section .clear-btn {
-            background: transparent;
-            border: 1px solid var(--border);
-            color: var(--text-dim);
-            box-shadow: none;
-            padding: 8px 12px;
-        }
-        .features-section .clear-btn:hover {
-            border-color: rgba(239,68,68,0.6);
-            background: rgba(239,68,68,0.12);
-            color: #fecaca;
-        }
+
 
         /* 选择器细节优化 */
         .model-selector select, .image-options select {
@@ -459,11 +434,7 @@
                 </select>
             </div>
 
-            <div class="features-section">
-                <h3>对话功能</h3>
-                <button class="clear-btn" onclick="clearChat()">清除对话</button>
-                <div style="margin-top:10px;font-size:12px;color:var(--text-dim);">快速重置当前会话内容</div>
-            </div>
+
 
             <div class="text-to-image-section">
                 <h3>文生图功能</h3>
