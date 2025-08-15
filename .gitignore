@@ -1,68 +1,17 @@
 # Python
 __pycache__/
-*.py[cod]
-*$py.class
-*.so
-.Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
-MANIFEST
+*.pyc
 
-# PyTorch
-*.pth
-*.pt
-*.ckpt
+# Env
+.env
 
-# Virtual environments
-venv/
-env/
-ENV/
-.venv/
-.env/
-
-# IDE
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
+# Node
+node_modules/
 
 # OS
 .DS_Store
 Thumbs.db
 
-# Logs
-*.log
-
-# API keys and config files (if they contain sensitive data)
-# apiconfig.txt
-
-# Temporary files
-*.tmp
-*.temp
-
-# Jupyter Notebook
-.ipynb_checkpoints
-
-# pytest
-.pytest_cache/
-.coverage
-htmlcov/
-
-# mypy
-.mypy_cache/
-.dmypy.json
-dmypy.json 
+# Build outputs
+/dist
+/build 
