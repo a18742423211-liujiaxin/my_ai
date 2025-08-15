@@ -4,7 +4,9 @@ import os
 
 class HunyuanAPI:
     def __init__(self):
-        self.api_key = os.getenv('HUNYUAN_API_KEY', 'sk-rEyLszJIeokPDbL0bAsWwjg6Nk675czJ2CnThN69JZyjCFWF')
+        self.api_key = os.getenv('HUNYUAN_API_KEY')
+        if not self.api_key:
+            raise RuntimeError('Missing environment variable HUNYUAN_API_KEY')
         self.base_url = "https://api.hunyuan.cloud.tencent.com/v1"
         self.headers = {
             "Authorization": f"Bearer {self.api_key}",

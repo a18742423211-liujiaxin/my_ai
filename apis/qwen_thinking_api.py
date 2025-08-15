@@ -4,7 +4,9 @@ import json
 
 class QwenThinkingAPI:
     def __init__(self):
-        self.api_key = os.getenv('DASHSCOPE_API_KEY', 'sk-2d5c7dbf8a624240a39f59e3e5d382cf')
+        self.api_key = os.getenv('DASHSCOPE_API_KEY')
+        if not self.api_key:
+            raise RuntimeError('Missing environment variable DASHSCOPE_API_KEY')
         self.client = OpenAI(
             api_key=self.api_key,
             base_url="https://dashscope.aliyuncs.com/compatible-mode/v1"
@@ -121,34 +123,27 @@ class QwenThinkingAPI:
                             "delta": {
                                 "reasoning_content": delta.reasoning_content
                             }
-                        }],
-                        "thinking_phase": True
+                        }]
                     }
                 
-                # 处理回复内容
+                # 一旦开始输出正式答案，就只输出答案内容
                 if hasattr(delta, "content") and delta.content:
-                    if not is_answering:
-                        is_answering = True
-                        # 标记开始回复阶段
-                        yield {
-                            "choices": [{
-                                "delta": {
-                                    "content": ""
-                                }
-                            }],
-                            "thinking_phase": False,
-                            "answer_start": True
-                        }
-                    
-                    answer_content += delta.content
+                    is_answering = True
                     yield {
                         "choices": [{
                             "delta": {
                                 "content": delta.content
                             }
-                        }],
-                        "thinking_phase": False
+                        }]
                     }
-                    
+            
+            # 结束时输出一个汇总，包含完整的思考内容和回答内容（如有需要）
+            if reasoning_content or answer_content:
+                yield {
+                    "summary": {
+                        "reasoning": reasoning_content if reasoning_content else None,
+                        "answer": answer_content if answer_content else None
+                    }
+                }
         except Exception as e:
             yield {"error": f"流式响应处理失败: {str(e)}"} 

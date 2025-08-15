@@ -4,7 +4,9 @@ import json
 
 class QwenNormalAPI:
     def __init__(self):
-        self.api_key = os.getenv('DASHSCOPE_API_KEY', 'sk-2d5c7dbf8a624240a39f59e3e5d382cf')
+        self.api_key = os.getenv('DASHSCOPE_API_KEY')
+        if not self.api_key:
+            raise RuntimeError('Missing environment variable DASHSCOPE_API_KEY')
         self.client = OpenAI(
             api_key=self.api_key,
             base_url="https://dashscope.aliyuncs.com/compatible-mode/v1"
