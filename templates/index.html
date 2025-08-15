@@ -212,10 +212,12 @@
             box-shadow: 0 0 0 3px rgba(124,58,237,0.18), inset 0 0 24px rgba(34,211,238,0.12);
         }
 
-        .image-options { display: flex; gap: 10px; }
+        .image-options { display: flex; flex-direction: column; gap: 10px; }
         .image-options select {
             flex: 1; padding: 10px; border: 1px solid var(--border); border-radius: 10px; font-size: 12px; color: var(--text); background: rgba(2,6,23,0.5);
         }
+        #imageStyle { flex: 1; min-width: 0; }
+        #imageSize { flex: 1.6; min-width: 0; }
 
         .generate-image-btn {
             background: linear-gradient(90deg, var(--secondary), var(--primary));
@@ -380,6 +382,7 @@
             .chat-container { height: 100%; }
             .message { max-width: 85%; }
             .messages { max-height: calc(100vh - 400px); }
+            .image-options { flex-direction: column; }
         }
     </style>
 </head>
@@ -411,7 +414,7 @@
                         <select id="imageStyle" title="选择图像风格">
                             <option value="<auto>">自动风格</option>
                         </select>
-                        <select id="imageSize">
+                        <select id="imageSize" title="选择图像尺寸">
                             <option value="1024*1024">1024×1024 (正方形)</option>
                         </select>
                     </div>
