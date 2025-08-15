@@ -712,8 +712,7 @@ API Key时效性说明
 
 如果您需要为第三方应用或用户提供临时访问权限，或者希望严格控制敏感数据访问、删除等高风险操作时，可以获取临时鉴权Token（有效期为60秒），避免直接暴露长期有效的API Key，降低泄露风险。
 
-apikey:
-sk-2d5c7dbf8a624240a39f59e3e5d382cf
+
 
 
 腾讯元宝：
@@ -1219,4 +1218,3 @@ curl --location 'https://api.hunyuan.cloud.tencent.com/v1/embeddings' \
     }
 }
 
-sk-rEyLszJIeokPDbL0bAsWwjg6Nk675czJ2CnThN69JZyjCFWF
