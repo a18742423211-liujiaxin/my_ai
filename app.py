@@ -300,11 +300,6 @@ def get_models():
             'description': '腾讯混元大模型，支持功能增强',
             'features': ['chat', 'stream', 'enhancement']
         },
-        'wanx': {
-            'name': '万象文生图',
-            'description': '阿里云万象文生图服务',
-            'features': ['text_to_image', 'image_generation']
-        },
         'default': 'qwen_normal'
     })
 
